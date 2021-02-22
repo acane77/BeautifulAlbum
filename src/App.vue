@@ -4,7 +4,7 @@
       <ContentView :base_name="contentAlbumName" :album_friendly_name="contentFriendlyName"
                    @should-show-sidebar="(val, mode) =>  mode === 'mobile' ? sidebar_shown_on_mobile_mode = val : sidebar_shown_on_pc_mode = val"
                    :sidebar_shown_pc = "sidebar_shown_on_pc_mode"
-                   @preview-photo="(a,b,c,d) => previewPhoto(a,b,c,d)"
+                   @preview-photo="(a,b,c,d,e) => previewPhoto(a,b,c,d,e)"
       ></ContentView>
     </div>
     <div class="sidebar-mobile-mask" v-show="sidebar_shown_on_mobile_mode" @click="sidebar_shown_on_mobile_mode = false"></div>
@@ -15,8 +15,8 @@
     </div>
     <div class="preview-container" v-show="preview_shown">
       <Preview  :current_photo_filename="preview_filename" :image_list="preview_imagelist" :index="preview_index" :current_album_name="preview_album_name"
-                :catalog_name="contentFriendlyName"
-               @hide-preview="preview_shown = false"
+                :catalog_name="contentFriendlyName" :current_photo="preview_current_obj"
+                @hide-preview="preview_shown = false"
       ></Preview>
     </div>
   </div>
@@ -43,17 +43,19 @@ export default {
     preview_imagelist: [],
     preview_index: 0,
     preview_album_name: '',
+    preview_current_obj: '',
 
     contentAlbumName: "/all",
     contentFriendlyName: "图库",
   }),
   methods: {
-    previewPhoto(filename, photo_list, index, album_name) {
+    previewPhoto(filename, photo_list, index, album_name, photo_obj) {
       this.preview_filename = filename;
       this.preview_index = index;
       this.preview_imagelist = photo_list;
-      this.preview_shown = true;
       this.preview_album_name = album_name;
+      this.preview_current_obj = photo_obj;
+      this.preview_shown = true;
     },
   },
   mounted() {

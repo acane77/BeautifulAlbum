@@ -5,7 +5,9 @@
         <span class="title-text">{{ album_friendly_name }}</span>
       </div>
       <div class="title right">
+        <span style="color: #eee; margin-right: 10px;">{{ photo_count }}张图片</span>
         <button>共享</button>
+
       </div>
       <div class="back left"   style="line-height:45px; left: 18px; top: 0" @click="raise_event_show_sidebar(true, 'mobile')">
         <i class="larrow" style="border-color: white"></i><span class="backtext">照片</span>
@@ -18,7 +20,7 @@
 
     <div>
       <div class="photo box" v-for="(photo, i) in photo_list" :photo-name="photo.name" :key="i" :style="{ backgroundImage: `url('${ get_thumbnail_image(photo.al, photo.name) }')` }"
-            @click="raise_event_show_preview(photo.name, photo_list, i, photo.al)"
+            @click="raise_event_show_preview(photo.name, photo_list, i, photo.al, photo)"
       >
       </div>
     </div>
@@ -77,8 +79,8 @@ export default {
     raise_event_show_sidebar(val, mode) {
       this.$emit('should-show-sidebar', val, mode);
     },
-    raise_event_show_preview(image_file_name, photo_list, photo_index, album_name) {
-      this.$emit('preview-photo', image_file_name, photo_list, photo_index, album_name);
+    raise_event_show_preview(image_file_name, photo_list, photo_index, album_name, photo_obj) {
+      this.$emit('preview-photo', image_file_name, photo_list, photo_index, album_name, photo_obj);
     },
     async load_image() {
       if (!this.response_load_new) {

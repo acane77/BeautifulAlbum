@@ -1,8 +1,8 @@
 <template>
   <div :class="showNavBar ? 'preview-with-navbar' : 'preview-hidden-navbar'" style="width: 100%; height: 100%;">
     <span style="position: absolute; top: 45%; text-align: center; color: #888; display: block; width: 100%;">正在加载图片...</span>
-    <div class="preview-photo-base preview-bg" :style="{backgroundImage: 'url(\''+thumbnail_path+'\')', backgroundSize: getBackgroundSize() }"></div>
-    <div class="preview-photo-high-res preview-bg" :style="{backgroundImage: 'url(\''+photo_path+'\')', backgroundSize: getBackgroundSize() }"></div>
+    <div class="preview-photo-base preview-bg" :style="preview_cache_img_style"></div>
+    <div class="preview-photo-high-res preview-bg" :style="preview_img_style"></div>
     <div class="preview-mask" @click="() => { showNavBar = !showNavBar }"></div>
     <div class="navbar" style="width: 100% !important;" v-show="showNavBar">
       <div class="nav-title">
@@ -27,9 +27,11 @@ import '../css/preview.css';
 
 export default {
   name: "Preview",
-  props: [ 'current_album_name', 'current_photo_filename', 'image_list', 'index', 'catalog_name' ],
+  props: [ 'current_album_name', 'current_photo_filename', 'image_list', 'index', 'catalog_name', 'current_photo' ],
   data: () => ({
     showNavBar: true,
+    preview_img_style: {},
+    preview_cache_img_style: {}
   }),
   computed: {
     photo_name() {
@@ -41,16 +43,10 @@ export default {
     photo_path() {
       return `/api/album/${this.current_album_name}/${this.current_photo_filename}`;
     },
-    current_photo() {
-      return this.image_list[this.index];
-    }
   },
   methods: {
     raise_hide_preview() {
       this.$emit('hide-preview');
-    },
-    load_image() {
-
     },
     thumbnail_path_at_index(i) {
       return `/api/album-cache/${this.image_list[i].al}/${this.image_list[i].name}`;
@@ -94,9 +90,20 @@ export default {
       }
     }
   },
-  mounted() {
+  watch: {
+    current_photo() {
+      this.preview_img_style = {
+        backgroundImage: 'url(\''+this.photo_path+'\')',
+        backgroundSize: this.getBackgroundSize()
+      };
 
+      this.preview_cache_img_style = {
+        backgroundImage: 'url(\''+this.thumbnail_path+'\')',
+        backgroundSize: this.getBackgroundSize()
+      };
+    }
   },
+  mounted() {},
 }
 </script>
 
