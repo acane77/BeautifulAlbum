@@ -53,7 +53,11 @@ export default {
       this.preview_imagelist = photo_list;
       this.preview_shown = true;
       this.preview_album_name = album_name;
-    }
+    },
+  },
+  mounted() {
+    if (window.innerWidth <= 500)
+      this.sidebar_shown_on_mobile_mode = true;
   }
 }
 </script>
@@ -160,7 +164,6 @@ body {
 @media screen and (max-width: 500px) {
   .sidebar-container {
     width: 100%;
-    display: block; /* show on initial */
   }
   .navbar {
     width: 100% !important;

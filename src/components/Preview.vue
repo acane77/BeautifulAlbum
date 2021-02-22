@@ -4,7 +4,7 @@
     <div class="preview-photo-base preview-bg" :style="{backgroundImage: 'url(\''+thumbnail_path+'\')', backgroundSize: current_photo.h > current_photo.w ? 'auto 100%':'100% auto' }"></div>
     <div class="preview-photo-high-res preview-bg" :style="{backgroundImage: 'url(\''+photo_path+'\')', backgroundSize: current_photo.h > current_photo.w ? 'auto 100%':'100% auto' }"></div>
     <div class="preview-mask" @click="() => { showNavBar = !showNavBar }"></div>
-    <div class="navbar" style="width: 100%;" v-show="showNavBar">
+    <div class="navbar" style="width: 100% !important;" v-show="showNavBar">
       <div class="nav-title">
         {{ photo_name }}
       </div>
@@ -13,8 +13,7 @@
       </div>
 
       <div class="right-button-group">
-        <a href="javascript:void(0)">分享</a>
-        <a style="margin-left: 15px;" href="javascript:void(0)">放映幻灯片</a>
+        <a href="javascript:void(0)" @click="downloadPhoto()">下载</a>
       </div>
 
 
@@ -59,6 +58,9 @@ export default {
     photo_path_at_index(i) {
       return `/api/album/${this.image_list[i].al}/${this.image_list[i].name}`;
     },
+    downloadPhoto() {
+      window.open(this.photo_path);
+    }
   },
   mounted() {
 

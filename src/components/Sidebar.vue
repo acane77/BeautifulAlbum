@@ -52,7 +52,7 @@ export default {
     on_switch_album(album_name, album_friendly_name) {
       this.$emit('switch-album', album_name, album_friendly_name);
       this.selected_album_name = album_name;
-      if (window.innerWidth <= 500) {
+      if (window.innerWidth <= 1200) {
         this.raise_event_show_sidebar(false, 'mobile');
       }
     },
