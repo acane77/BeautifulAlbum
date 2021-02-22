@@ -59,7 +59,6 @@ body {
   width: 20%;
   height: 100%;
   background: aliceblue;
-  min-width: 200px;
 }
 .content-container {
   position: fixed;
@@ -134,7 +133,15 @@ body {
   .sidebar-mobile-mask {
     display: block;
   }
+}
 
-
+@media screen and (max-width: 500px) {
+  .sidebar-container {
+    width: 100%;
+    display: block; /* show on initial */
+  }
+  .navbar {
+    width: 100% !important;
+  }
 }
 </style>

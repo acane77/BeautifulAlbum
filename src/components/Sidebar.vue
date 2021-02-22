@@ -5,7 +5,7 @@
         照片
       </div>
       <div class="left-button-group">
-        <a href="javascript:void(0)" @click="() => { this.raise_event_show_sidebar(false, 'mobile'); this.raise_event_show_sidebar(false, 'pc') }">隐藏</a>
+        <a class="hidden-btn" href="javascript:void(0)" @click="() => { this.raise_event_show_sidebar(false, 'mobile'); this.raise_event_show_sidebar(false, 'pc') }">隐藏</a>
       </div>
 
       <div class="right-button-group">
@@ -34,6 +34,7 @@
 
 <script>
 import '../css/style.css';
+import '../css/sidebar.css';
 import utils from "@/js/utils";
 
 export default {
@@ -51,6 +52,9 @@ export default {
     on_switch_album(album_name, album_friendly_name) {
       this.$emit('switch-album', album_name, album_friendly_name);
       this.selected_album_name = album_name;
+      if (window.innerWidth <= 500) {
+        this.raise_event_show_sidebar(false, 'mobile');
+      }
     },
     get_css_class_list_item(album_name) {
       return album_name === this.selected_album_name ? "selected" : "";

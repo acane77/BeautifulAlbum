@@ -11,7 +11,7 @@
         <i class="larrow" style="border-color: white"></i><span class="backtext">照片</span>
       </div>
 
-      <div :class="['back', 'left', 'sidebar-hidden-left', sidebar_shown_pc?'':'sidebar-hidden']" @click="raise_event_show_sidebar(true, 'pc')">
+      <div :class="['back', 'left', 'sidebar-hidden-left', sidebar_shown_pc?'':'sidebar-hidden']" @click="raise_event_show_sidebar(true, 'pc')" style="line-height:45px; left: 18px; top: 0">
         <span class="backtext">显示</span>
       </div>
     </div>
