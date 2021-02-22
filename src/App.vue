@@ -15,6 +15,7 @@
     </div>
     <div class="preview-container" v-show="preview_shown">
       <Preview  :current_photo_filename="preview_filename" :image_list="preview_imagelist" :index="preview_index" :current_album_name="preview_album_name"
+                :catalog_name="contentFriendlyName"
                @hide-preview="preview_shown = false"
       ></Preview>
     </div>
