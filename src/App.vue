@@ -68,7 +68,6 @@ body {
   display: inline-block;
   width: 80%;
   background: #fff;
-  min-width: 500px;
   height: 100%;
 }
 
