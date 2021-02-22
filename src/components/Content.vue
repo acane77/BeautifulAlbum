@@ -7,7 +7,7 @@
       <div class="title right">
         <button>共享</button>
       </div>
-      <div class="back left" @click="raise_event_show_sidebar(true, 'mobile')">
+      <div class="back left"   style="line-height:45px; left: 18px; top: 0" @click="raise_event_show_sidebar(true, 'mobile')">
         <i class="larrow" style="border-color: white"></i><span class="backtext">照片</span>
       </div>
 
