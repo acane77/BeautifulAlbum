@@ -17,7 +17,9 @@
     </div>
 
     <div>
-      <div class="photo box" v-for="(photo, i) in photo_list" :photo-name="photo.name" :key="i" :style="{ backgroundImage: `url('${ get_thumbnail_image(photo.al, photo.name) }')` }">
+      <div class="photo box" v-for="(photo, i) in photo_list" :photo-name="photo.name" :key="i" :style="{ backgroundImage: `url('${ get_thumbnail_image(photo.al, photo.name) }')` }"
+            @click="raise_event_show_preview(photo.name, photo_list, i, photo.al)"
+      >
       </div>
     </div>
   </div>
@@ -74,6 +76,9 @@ export default {
   methods: {
     raise_event_show_sidebar(val, mode) {
       this.$emit('should-show-sidebar', val, mode);
+    },
+    raise_event_show_preview(image_file_name, photo_list, photo_index, album_name) {
+      this.$emit('preview-photo', image_file_name, photo_list, photo_index, album_name);
     },
     async load_image() {
       if (!this.response_load_new) {

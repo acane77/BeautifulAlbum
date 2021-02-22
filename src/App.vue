@@ -4,6 +4,7 @@
       <ContentView :base_name="contentAlbumName" :album_friendly_name="contentFriendlyName"
                    @should-show-sidebar="(val, mode) =>  mode === 'mobile' ? sidebar_shown_on_mobile_mode = val : sidebar_shown_on_pc_mode = val"
                    :sidebar_shown_pc = "sidebar_shown_on_pc_mode"
+                   @preview-photo="(a,b,c,d) => previewPhoto(a,b,c,d)"
       ></ContentView>
     </div>
     <div class="sidebar-mobile-mask" v-show="sidebar_shown_on_mobile_mode" @click="sidebar_shown_on_mobile_mode = false"></div>
@@ -12,17 +13,23 @@
                @should-show-sidebar="(val, mode) =>  mode === 'mobile' ? sidebar_shown_on_mobile_mode = val : sidebar_shown_on_pc_mode = val"
       ></Sidebar>
     </div>
+    <div class="preview-container" v-show="preview_shown">
+      <Preview  :current_photo_filename="preview_filename" :image_list="preview_imagelist" :index="preview_index" :current_album_name="preview_album_name"
+               @hide-preview="preview_shown = false"
+      ></Preview>
+    </div>
   </div>
 </template>
 
 <script>
 import Sidebar from "@/components/Sidebar";
 import ContentView from "@/components/Content";
+import Preview from '@/components/Preview';
 
 export default {
   name: 'App',
   components: {
-    Sidebar, ContentView
+    Sidebar, ContentView, Preview
   },
   data: () => ({
     activeName: 'beautiful-album',
@@ -30,9 +37,24 @@ export default {
     sidebar_shown_on_mobile_mode: false,
     sidebar_shown_on_pc_mode: true,
 
+    preview_shown: false,
+    preview_filename: '',
+    preview_imagelist: [],
+    preview_index: 0,
+    preview_album_name: '',
+
     contentAlbumName: "/all",
     contentFriendlyName: "图库",
   }),
+  methods: {
+    previewPhoto(filename, photo_list, index, album_name) {
+      this.preview_filename = filename;
+      this.preview_index = index;
+      this.preview_imagelist = photo_list;
+      this.preview_shown = true;
+      this.preview_album_name = album_name;
+    }
+  }
 }
 </script>
 
@@ -143,5 +165,15 @@ body {
   .navbar {
     width: 100% !important;
   }
+}
+
+
+div.preview-container {
+  position: fixed;
+  z-index: 9999;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
 }
 </style>
