@@ -1,11 +1,11 @@
 <template>
-  <div style="padding-left: 10px; padding-right: 10px; height: 100%; overflow-y: auto">
-    <div class="navbar large">
+  <div style="padding-left: 10px; padding-right: 10px; height: 100%; overflow-y: auto" @scroll="handleScroll">
+    <div :class="['navbar', shouldShowSemiTransparentNavBar ? '' : 'large']">
       <div class="nav-title">
         照片
       </div>
       <div class="left-button-group">
-        <a href="javascript:void(0)">隐藏</a>
+        <a href="javascript:void(0)" @click="() => { this.raise_event_show_sidebar(false, 'mobile'); this.raise_event_show_sidebar(false, 'pc') }">隐藏</a>
       </div>
 
       <div class="right-button-group">
@@ -13,20 +13,21 @@
       </div>
     </div>
 
-    <div class="title1 navtitle" style="margin-top: 50px">
+    <div class="title1 navtitle" :style="{ marginTop: '50px', opacity: 1-shouldShowSemiTransparentNavBar }">
       照片
     </div>
 
     <div class="listview" style="margin-top: 5px;">
-      <a class="selected" href="javascript:void(0)"><span>图库</span></a>
-      <a href="javascript:void(0)"><span>最近项目</span></a>
+      <a :class="get_css_class_list_item('/all')" @click="on_switch_album('/all', '图库')" href="javascript:void(0)"><span>图库</span></a>
+      <a :class="get_css_class_list_item('/recent')" @click="on_switch_album('/recent', '最近项目')" href="javascript:void(0)"><span>最近项目</span></a>
+      <a :class="get_css_class_list_item('/fav')" @click="on_switch_album('/fav', '我的收藏')" href="javascript:void(0)"><span>我的收藏</span></a>
     </div>
 
     <div class="title2">
       我的相簿
     </div>
     <div class="listview">
-      <a href="javascript:void(0)" v-for="album in album_list" :key="album"><span>{{ album.friendly_name }}</span></a>
+      <a :class="get_css_class_list_item(album.name)" @click="on_switch_album(album.name, album.friendly_name)"  href="javascript:void(0)" v-for="album in album_list" :key="album"><span>{{ album.friendly_name }}</span></a>
     </div>
   </div>
 </template>
@@ -38,14 +39,35 @@ import utils from "@/js/utils";
 export default {
   name: "Sidebar",
   data: () => ({
-    album_list: []
+    album_list: [],
+    selected_album_name: '/all',
+
+    shouldShowSemiTransparentNavBar: false,
   }),
   methods: {
-
+    raise_event_show_sidebar(val, mode) {
+      this.$emit('should-show-sidebar', val, mode);
+    },
+    on_switch_album(album_name, album_friendly_name) {
+      this.$emit('switch-album', album_name, album_friendly_name);
+      this.selected_album_name = album_name;
+    },
+    get_css_class_list_item(album_name) {
+      return album_name === this.selected_album_name ? "selected" : "";
+    },
+    handleScroll: function(el) {
+      console.log((el.srcElement.scrollTop));
+      if((el.srcElement.scrollTop) >= 30) {
+        this.shouldShowSemiTransparentNavBar = true;
+      }
+      else {
+        console.log('ttt');
+        this.shouldShowSemiTransparentNavBar = false;
+      }
+    }
   },
   async mounted() {
     this.album_list = await utils.get_json('get-album')
-
   }
 }
 </script>

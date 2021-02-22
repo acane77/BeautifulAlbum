@@ -58,13 +58,25 @@ div.cnav .back .backtext {
     margin-left: 2px;
     color: white;
     font-size: 16px;
+    cursor: pointer;
 }
 
-div.cnav .title.left.title-bar-is-hidden {
+div.cnav .back .backtext:active {
+    color: #aaaaff;
+}
+
+div.cnav .back.sidebar-hidden {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    display: block;
+}
+div.cnav .title.left.sidebar-hidden {
     top: 45px;
     left: 15px;
 }
 
+/* Photos */
 .box {
     position: relative;
     width:    20%; /* desired width */
@@ -113,6 +125,10 @@ div.photo {
     div.cnav .title.left {
         top: 45px;
         left: 15px;
+    }
+
+    .sidebar-hidden-left {
+        display: none !important;
     }
 }
 

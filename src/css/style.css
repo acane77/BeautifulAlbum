@@ -34,6 +34,11 @@ i.larrow {
     display: inline-block;
 }
 
+i.rarrow:active,
+i.larrow:active {
+    border-color: #8888ff;
+}
+
 /* 1. Components */
 
 /*   1.1 Texts */

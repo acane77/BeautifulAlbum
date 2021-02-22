@@ -1,14 +1,18 @@
 <template>
   <div  style="height: 100%; overflow-y: auto" @scroll="handleScroll">
     <div class="cnav">
-      <div class="title left">
-        <span class="title-text">图库</span>
+      <div :class="['title', 'left', sidebar_shown_pc?'':'sidebar-hidden']">
+        <span class="title-text">{{ album_friendly_name }}</span>
       </div>
       <div class="title right">
         <button>共享</button>
       </div>
-      <div class="back left">
+      <div class="back left" @click="raise_event_show_sidebar(true, 'mobile')">
         <i class="larrow" style="border-color: white"></i><span class="backtext">照片</span>
+      </div>
+
+      <div :class="['back', 'left', 'sidebar-hidden-left', sidebar_shown_pc?'':'sidebar-hidden']" @click="raise_event_show_sidebar(true, 'pc')">
+        <span class="backtext">显示</span>
       </div>
     </div>
 
@@ -30,7 +34,7 @@ const PHOTO_PER_PAGE = 50;
 export default {
   name: "Content",
   components: {},
-  props: [ 'base_name' ],
+  props: [ 'base_name', 'album_friendly_name', 'sidebar_shown_pc' ],
   data() {
     return {
       page_count: 0,
@@ -47,6 +51,8 @@ export default {
         return 'get-photo-';
       if (this.base_name === '/recent')
         return 'get-recent-photo-';
+      if (this.base_name === '/fav')
+        return 'get-fav-photo-'; /// NOT: load from localstorage
       return this.base_name + '-get-photo-';
     },
     album_get_count_json_name() {
@@ -56,21 +62,19 @@ export default {
       return this.album_common_prefix + "page-" + String(this.current_page_to_load);
     },
   },
-  watch: {},
+  watch: {
+    base_name() {
+      this.initialize();
+    }
+  },
   created() {},
   async mounted() {
-    // get page count
-    this.photo_count = (await utils.get_json(this.album_get_count_json_name)).count;
-    this.page_count = Math.ceil(this.photo_count / PHOTO_PER_PAGE);
-
-    // load page 0 first
-    if (this.page_count > 0) {
-      this.load_image();
-    }
-
-    this.scroll();
+    this.initialize();
   },
   methods: {
+    raise_event_show_sidebar(val, mode) {
+      this.$emit('should-show-sidebar', val, mode);
+    },
     async load_image() {
       if (!this.response_load_new) {
         return;
@@ -85,8 +89,21 @@ export default {
     get_thumbnail_image(alumn_name ,image_name) {
       return "/api/album-cache/" + alumn_name + "/" + image_name;
     },
-    handleScroll: function(el) {
+    async initialize() {
+      this.current_page_to_load = 0;
+      this.photo_list = [];
+      this.response_load_new = true;
+      this.initial_scroll_height = 0;
+      // get page count
+      this.photo_count = (await utils.get_json(this.album_get_count_json_name)).count;
+      this.page_count = Math.ceil(this.photo_count / PHOTO_PER_PAGE);
 
+      // load page 0 first
+      if (this.page_count > 0) {
+        this.load_image();
+      }
+    },
+    handleScroll: function(el) {
       if (this.initial_scroll_height === 0)
         this.initial_scroll_height = el.srcElement.scrollHeight / 10;
       if((el.srcElement.offsetHeight + el.srcElement.scrollTop) >= el.srcElement.scrollHeight - this.initial_scroll_height) {
