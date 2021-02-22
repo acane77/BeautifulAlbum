@@ -27,7 +27,13 @@
       我的相簿
     </div>
     <div class="listview">
-      <a :class="get_css_class_list_item(album.name)" @click="on_switch_album(album.name, album.friendly_name)"  href="javascript:void(0)" v-for="album in album_list" :key="album.name"><span>{{ album.friendly_name }}</span></a>
+      <a :class="get_css_class_list_item(album.name)" @click="on_switch_album(album.name, album.friendly_name)"  href="javascript:void(0)" v-for="album in album_list" :key="album.name">
+        <div style="position: relative">
+          <div class="list_img" :style="{ backgroundImage: album.preview==='' ? '':'url(\'/api/album-cache/' + album.name + '/' + album.preview + '\')' }"></div>
+          <span style="margin-left: 27px;">{{ album.friendly_name }}</span>
+        </div>
+
+      </a>
     </div>
   </div>
 </template>

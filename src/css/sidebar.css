@@ -3,3 +3,15 @@
         display: none;
     }
 }
+
+.list_img {
+    position: absolute;
+    top:8px;
+    left: -6px;
+    background-color: white;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 3px;
+    background-size: cover;
+}
