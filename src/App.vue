@@ -20,6 +20,9 @@
                 @hide-preview="preview_shown = false"
       ></Preview>
     </div>
+    <div class="password-container" v-show="password_input_shown">
+      <PasswordInput ref="password_input" @submit-password="pwd => checkPassword(pwd)"></PasswordInput>
+    </div>
   </div>
 </template>
 
@@ -27,6 +30,7 @@
 import Sidebar from "@/components/Sidebar";
 import ContentView from "@/components/Content";
 import Preview from '@/components/Preview';
+import PasswordInput from "@/components/PasswordInput";
 
 import utils from "@/js/utils";
 let md5 = require('js-md5');
@@ -34,13 +38,14 @@ let md5 = require('js-md5');
 export default {
   name: 'App',
   components: {
-    Sidebar, ContentView, Preview
+    Sidebar, ContentView, Preview, PasswordInput
   },
   data: () => ({
     activeName: 'beautiful-album',
     content_view_shown: true,
     sidebar_shown_on_mobile_mode: false,
     sidebar_shown_on_pc_mode: true,
+    password_input_shown: false,
 
     preview_shown: false,
     preview_filename: '',
@@ -61,39 +66,54 @@ export default {
       this.preview_current_obj = photo_obj;
       this.preview_shown = true;
     },
+
+    async requirePassword() {
+      this.password_input_shown = true;
+    },
+
+    async checkPassword(pwd) {
+      window.miyuki_password = pwd
+      window.enabled_password = true;
+      try {
+        await utils.get_secured_json('get-album');
+        localStorage.setItem("password", pwd)
+        this.$refs.password_input.feedback(true);
+        this.password_input_shown = false;
+        this.initialize();
+      }
+      catch (ee) {
+        localStorage.removeItem("password");
+        this.requirePassword();
+        this.$refs.password_input.feedback(false);
+      }
+    },
+
+    initialize() {
+      this.$refs.sidebar.getAlbumList();
+
+      this.contentAlbumName = "/all";
+      this.contentFriendlyName = "图库";
+    }
   },
-  async beforeCreate() {
+  async mounted() {
+    if (window.innerWidth <= 500)
+      this.sidebar_shown_on_mobile_mode = true;
+
     // Check if password enabled
     let password_enabled = await utils.get_json('password');
     password_enabled = password_enabled.enabled;
     let __TRUE__ = true;
     if (password_enabled) {
-      do {
-        let pwd = localStorage.getItem("password") !== null ?
-            localStorage.getItem("password"):
-            md5(prompt('请输入密码'))
-        window.miyuki_password = pwd
-        window.enabled_password = true;
-        try {
-          await utils.get_secured_json('get-album');
-          localStorage.setItem("password", pwd)
-          break;
-        }
-        catch (ee) {
-          localStorage.removeItem("password");
-          alert('密码错误，请重新输入');
-        }
-      } while (__TRUE__);
+      if (localStorage.getItem("password") !== null) {
+        this.checkPassword(localStorage.getItem("password"))
+      }
+      else this.requirePassword();
     }
-    else window.enabled_password = false;
+    else {
+      window.enabled_password = false;
+      this.initialize();
+    }
 
-    this.$refs.sidebar.getAlbumList();
-
-    this.contentAlbumName = "/all";
-    this.contentFriendlyName = "图库";
-
-    if (window.innerWidth <= 500)
-      this.sidebar_shown_on_mobile_mode = true;
   }
 }
 </script>
