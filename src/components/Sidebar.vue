@@ -9,7 +9,7 @@
       </div>
 
       <div class="right-button-group">
-        <a class="disabled" href="javascript:void(0)">编辑</a>
+        <a href="javascript:void(0)" @click="logout()">退出</a>
       </div>
     </div>
 
@@ -77,6 +77,10 @@ export default {
     },
     async getAlbumList() {
       this.album_list = await utils.get_secured_json('get-album')
+    },
+    logout() {
+      localStorage.removeItem('password');
+      location.reload();
     }
   }
 }

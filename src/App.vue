@@ -138,7 +138,7 @@ body {
   top: 0;
   left: 0;
   display: inline-block;
-  width: 20%;
+  width: 25%;
   height: 100%;
   background: aliceblue;
 }
@@ -147,7 +147,7 @@ body {
   top: 0;
   right: 0;
   display: inline-block;
-  width: 80%;
+  width: 75%;
   background: #fff;
   height: 100%;
 }
@@ -190,7 +190,16 @@ body {
   display: none;
 }
 
-@media screen and (max-width: 1200px) {
+@media screen and (min-width: 1400px) {
+  .sidebar-container {
+    width: 20%;
+  }
+  .content-container {
+    width: 80%;
+  }
+}
+
+@media screen and (max-width: 1100px) {
   .sidebar-container {
     display: none;
     position: fixed;
