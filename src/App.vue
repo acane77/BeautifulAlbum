@@ -9,7 +9,8 @@
     </div>
     <div class="sidebar-mobile-mask" v-show="sidebar_shown_on_mobile_mode" @click="sidebar_shown_on_mobile_mode = false"></div>
     <div :class="['sidebar-container', sidebar_shown_on_pc_mode?'':'side-hidden-screen', sidebar_shown_on_mobile_mode?'sidebar-mobile-shown':'']">
-      <Sidebar @switch-album="(album_name, friendly_name) => { this.contentAlbumName = album_name; this.contentFriendlyName = friendly_name; }"
+      <Sidebar ref="sidebar"
+               @switch-album="(album_name, friendly_name) => { this.contentAlbumName = album_name; this.contentFriendlyName = friendly_name; }"
                @should-show-sidebar="(val, mode) =>  mode === 'mobile' ? sidebar_shown_on_mobile_mode = val : sidebar_shown_on_pc_mode = val"
       ></Sidebar>
     </div>
@@ -26,6 +27,9 @@
 import Sidebar from "@/components/Sidebar";
 import ContentView from "@/components/Content";
 import Preview from '@/components/Preview';
+
+import utils from "@/js/utils";
+let md5 = require('js-md5');
 
 export default {
   name: 'App',
@@ -45,8 +49,8 @@ export default {
     preview_album_name: '',
     preview_current_obj: '',
 
-    contentAlbumName: "/all",
-    contentFriendlyName: "图库",
+    contentAlbumName: "",
+    contentFriendlyName: "",
   }),
   methods: {
     previewPhoto(filename, photo_list, index, album_name, photo_obj) {
@@ -58,7 +62,36 @@ export default {
       this.preview_shown = true;
     },
   },
-  mounted() {
+  async beforeCreate() {
+    // Check if password enabled
+    let password_enabled = await utils.get_json('password');
+    password_enabled = password_enabled.enabled;
+    let __TRUE__ = true;
+    if (password_enabled) {
+      do {
+        let pwd = localStorage.getItem("password") !== null ?
+            localStorage.getItem("password"):
+            md5(prompt('请输入密码'))
+        window.miyuki_password = pwd
+        window.enabled_password = true;
+        try {
+          await utils.get_secured_json('get-album');
+          localStorage.setItem("password", pwd)
+          break;
+        }
+        catch (ee) {
+          localStorage.removeItem("password");
+          alert('密码错误，请重新输入');
+        }
+      } while (__TRUE__);
+    }
+    else window.enabled_password = false;
+
+    this.$refs.sidebar.getAlbumList();
+
+    this.contentAlbumName = "/all";
+    this.contentFriendlyName = "图库";
+
     if (window.innerWidth <= 500)
       this.sidebar_shown_on_mobile_mode = true;
   }

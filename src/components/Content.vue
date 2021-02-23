@@ -90,19 +90,23 @@ export default {
       setTimeout(() => { this.response_load_new = true; }, 1000)
       if (this.current_page_to_load >= this.page_count)
         return;
-      this.photo_list.push(...await utils.get_json(this.album_get_image_at_current_page_json_name));
+      this.photo_list.push(...await utils.get_secured_json(this.album_get_image_at_current_page_json_name));
       this.current_page_to_load++;
     },
     get_thumbnail_image(alumn_name ,image_name) {
       return "/api/album-cache/" + alumn_name + "/" + image_name;
     },
     async initialize() {
+      if (this.base_name === "")
+        return;
+
       this.current_page_to_load = 0;
       this.photo_list = [];
       this.response_load_new = true;
       this.initial_scroll_height = 0;
+      this.photo_count = this.page_count = 0;
       // get page count
-      this.photo_count = (await utils.get_json(this.album_get_count_json_name)).count;
+      this.photo_count = (await utils.get_secured_json(this.album_get_count_json_name)).count;
       this.page_count = Math.ceil(this.photo_count / PHOTO_PER_PAGE);
 
       // load page 0 first

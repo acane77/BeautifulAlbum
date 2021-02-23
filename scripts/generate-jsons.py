@@ -4,6 +4,10 @@ from PIL import Image
 import json
 import pathlib
 import math
+import hashlib
+
+PASSWORD_ENABLED = False
+PASSWORD_IN_MD5 = ''
 
 def get_album_path(album_name=''):
     if album_name != '':
@@ -27,6 +31,9 @@ def create_cache_dir(album_name=''):
     os.mkdir(get_album_thumbnail_path(album_name))
 
 def write_json_file(path, obj):
+    global PASSWORD_ENABLED, PASSWORD_IN_MD5
+    if PASSWORD_ENABLED:
+        path = "{}/{}".format(PASSWORD_IN_MD5, path)
     with open(path, 'w', encoding='utf8') as file:
         file.write(json.dumps(obj))
 
@@ -137,7 +144,26 @@ def generate_json_album_related(album_name=''):
 
     return image_data
 
+def MD5(str):
+    hl = hashlib.md5()
+    hl.update(str.encode(encoding='utf-8'))
+    return hl.hexdigest()
+
+def check_for_password():
+    global PASSWORD_ENABLED, PASSWORD_IN_MD5
+    if os.path.isfile("password.txt"):
+        password = read_file("password.txt")
+        PASSWORD_ENABLED = True
+        PASSWORD_IN_MD5 = MD5(password)
+        print('Password enabled: hash value is {}'.format(PASSWORD_IN_MD5))
+        # 创建具有密码的目录
+        if not os.path.isdir("./{}".format(PASSWORD_IN_MD5)):
+            os.mkdir("./{}".format(PASSWORD_IN_MD5))
+    write_json_file("password.json", {"enabled": PASSWORD_ENABLED})
+
 if __name__ == '__main__':
+    check_for_password()
+
     # 生成相册列表  /api/get-album.json
     generate_json__get_album()
 

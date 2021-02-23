@@ -74,10 +74,10 @@ export default {
         console.log('ttt');
         this.shouldShowSemiTransparentNavBar = false;
       }
+    },
+    async getAlbumList() {
+      this.album_list = await utils.get_secured_json('get-album')
     }
-  },
-  async mounted() {
-    this.album_list = await utils.get_json('get-album')
   }
 }
 </script>
