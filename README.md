@@ -3,7 +3,7 @@
 ## 简介
 使用Vue编写的，iOS相册风格的，纯静态响应式布局的在线相册。
 
-<a href="https://elizabethemilia.github.io/album-demo.html" STYLE="font-size: 18px">在线Demo</a> (密码为`secret`)
+<a href="https://acane77.github.io/album-demo.html" STYLE="font-size: 18px">在线Demo</a> (密码为`secret`)
 
 * 纯静态网页，运行时不需要任何后端程序和数据库，可存放在github.io。
 * 支持多个相册，访问时支持密码保护
