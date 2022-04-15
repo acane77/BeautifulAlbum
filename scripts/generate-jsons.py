@@ -82,7 +82,12 @@ def generate_json__get_album():
 ## 生成图片的缩略图并返回图片信息
 def make_thumbnail(album_name, image_file_name):
     cf = '{}{}'.format(get_album_thumbnail_path(album_name), image_file_name)
-    im = Image.open('{}{}'.format(get_album_path(album_name), image_file_name))
+    im = ""
+    try:
+        im = Image.open('{}{}'.format(get_album_path(album_name), image_file_name))
+    except:
+        print(" -- warning: cannot open: {}/{}".format(album_name, image_file_name))
+        return 0, 0
     width, height = im.size
     if (os.path.isfile(cf)):
         im.close()
@@ -91,7 +96,10 @@ def make_thumbnail(album_name, image_file_name):
     dst_height = int(dst_width*height/width)
     im.thumbnail((dst_width, dst_height))
     print('Generating thumbnail for: {}/{}'.format(album_name, image_file_name))
-    im.save(cf)
+    try:
+        im.save(cf)
+    except:
+        print(" -- warning: cannot save: {}/{}".format(album_name, image_file_name))
     im.close()
     return width, height
 
@@ -134,6 +142,8 @@ def generate_json_album_related(album_name=''):
         if os.path.isfile('{}{}'.format(get_album_path(album_name), pf)) and (pfl[-4:] in ['.png', '.jpg', '.gif'] or pfl[-5:] in ['.jpeg', '.tiff']):
             ## 生成缩略图
             width, height = make_thumbnail(album_name, pf)
+            if width == 0:
+                continue
             fd = pathlib.Path('{}{}'.format(get_album_path(album_name), pf))
             ctime = fd.stat().st_ctime
             image_data.append({ "al": album_name, "name": pf, "h": height, "w": width, "ct": ctime })
