@@ -20,55 +20,6 @@
 
 ## 如何使用？
 
-```bash
-git clone https://github.com/acane77/BeautifulAlbum
-cd BeautifulAlbum
-
-# Build web project
-npm install
-npm run build
-
-# Generate nessesary files
-cd scripts
-
-# Install requirements
-pip install pillow numpy
-
-# Make albums
-mkdir album
-
-# Create a album named
-mkdir album/cutecy
-echo "可可爱爱">album/cutecy.txt
-# Copy files to album directory
-cp /path/to/your/image/dir/*.jpg album/cutecy
-
-# Create a password
-echo "mypassword">password.txt
-
-python generate-jsons.py
-
-# Arrange the generated files
-mkdir ../dist/api
-cp -r albums ../dist/api
-cp -r album-caches ../dist/api
-cp *.json ../dist/api
-cd ..
-```
-
-然后可以使用http-server里面直接打开看看有没有配置好
-```bash
-cd dist     # npm构建目录
-npm install -g http-server
-http-server .
-```
-
-也可以打包传到服务器上
-```bash
-cd dist
-tar czf album-website.tar.gz *
-scp album-website.tar.gz $YOUR_SERVER
-```
 
 **首先，编译Web项目**
 
@@ -89,7 +40,60 @@ scp album-website.tar.gz $YOUR_SERVER
 
 注意：之后每一次更新完照片以后，都需要重新执行上述4-5步骤。
 
+---------
 
+上述过程的shell脚本：
+
+```bash
+git clone https://github.com/acane77/BeautifulAlbum
+cd BeautifulAlbum
+
+# 编译项目
+npm install
+npm run build
+
+# 生成需要的文件
+cd scripts
+
+# 安装依赖
+pip install pillow numpy
+
+# 创建相册
+mkdir album
+
+# 创建一个名为cute的相册
+mkdir album/cutecy
+echo "可可爱爱">album/cutecy.txt
+# 复制图片进去
+cp /path/to/your/image/dir/*.jpg album/cutecy
+
+# 创建一个密码
+echo "mypassword">password.txt
+
+# 生成相关的文件
+python generate-jsons.py
+
+# 组织生成的文件
+mkdir ../dist/api
+cp -r albums ../dist/api
+cp -r album-caches ../dist/api
+cp *.json ../dist/api
+cd ..
+```
+
+然后可以使用http-server里面直接打开看看有没有配置好
+```bash
+cd dist     # npm构建目录
+npm install -g http-server
+http-server .
+```
+
+也可以打包传到服务器上
+```bash
+cd dist
+tar czf album-website.tar.gz *
+scp album-website.tar.gz $YOUR_SERVER
+```
 
 ---------
 
