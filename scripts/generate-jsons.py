@@ -163,13 +163,15 @@ def check_for_password():
     global PASSWORD_ENABLED, PASSWORD_IN_MD5
     if os.path.isfile("password.txt"):
         password = read_file("password.txt")
+        write_json_file("password.json", {"enabled": True})
         PASSWORD_ENABLED = True
         PASSWORD_IN_MD5 = MD5(password)
         print('Password enabled: hash value is {}'.format(PASSWORD_IN_MD5))
         # 创建具有密码的目录
         if not os.path.isdir("./{}".format(PASSWORD_IN_MD5)):
             os.mkdir("./{}".format(PASSWORD_IN_MD5))
-    write_json_file("password.json", {"enabled": PASSWORD_ENABLED})
+    else
+        write_json_file("password.json", {"enabled": False})
 
 if __name__ == '__main__':
     check_for_password()

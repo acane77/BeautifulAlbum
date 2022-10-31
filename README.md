@@ -19,6 +19,57 @@
 ![Preview 2](docs/mprev.PNG)
 
 ## 如何使用？
+
+```bash
+git clone https://github.com/acane77/BeautifulAlbum
+cd BeautifulAlbum
+
+# Build web project
+npm install
+npm run build
+
+# Generate nessesary files
+cd scripts
+
+# Install requirements
+pip install pillow numpy
+
+# Make albums
+mkdir album
+
+# Create a album named
+mkdir album/cutecy
+echo "可可爱爱">album/cutecy.txt
+# Copy files to album directory
+cp /path/to/your/image/dir/*.jpg album/cutecy
+
+# Create a password
+echo "mypassword">password.txt
+
+python generate-jsons.py
+
+# Arrange the generated files
+mkdir ../dist/api
+cp -r albums ../dist/api
+cp -r album-caches ../dist/api
+cp *.json ../dist/api
+cd ..
+```
+
+然后可以使用http-server里面直接打开看看有没有配置好
+```bash
+cd dist     # npm构建目录
+npm install -g http-server
+http-server .
+```
+
+也可以打包传到服务器上
+```bash
+cd dist
+tar czf album-website.tar.gz *
+scp album-website.tar.gz $YOUR_SERVER
+```
+
 **首先，编译Web项目**
 
 0. 安装依赖： `npm install`
@@ -27,8 +78,8 @@
 **然后生成图片缓存以及相关json文件**
 
 0. 安装依赖：`pip3 install numpy pillow`
-1. 在scripts目录下，新建一个albums目录，这个目录用来存放相册。
-2. 在albums目录下新建目录，每一个目录都是一个相册，建议使用英语名，例如：`cutecy`。
+1. 在scripts目录下，新建一个`albums`目录，这个目录用来存放相册。
+2. 在`album`目录下新建目录，每一个目录都是一个相册，建议使用英语名，例如：`cutecy`。
    新建一个和之前的目录名同名的.txt文件可以自定义一个好看的名称，
    例如新建`cutecy.txt`，并在该文件中保存文本作为显示在界面中的相册名（例如：`超越妹妹可可爱爱`）。在每个相册的目录都可以放入任意的图片。 
    
@@ -37,6 +88,8 @@
 5. **在nginx的web root根目录下新建一个api目录，并将albums、album-caches以及生成的所有json文件放入该目录。**
 
 注意：之后每一次更新完照片以后，都需要重新执行上述4-5步骤。
+
+
 
 ---------
 
