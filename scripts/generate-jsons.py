@@ -170,7 +170,7 @@ def check_for_password():
         # 创建具有密码的目录
         if not os.path.isdir("./{}".format(PASSWORD_IN_MD5)):
             os.mkdir("./{}".format(PASSWORD_IN_MD5))
-    else
+    else:
         write_json_file("password.json", {"enabled": False})
 
 if __name__ == '__main__':
