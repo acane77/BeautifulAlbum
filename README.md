@@ -9,7 +9,6 @@
 * 支持多个相册，访问时支持密码保护
 
 
-
 ## 超越妹妹真的太可爱啦！！！
 
 ![Preview 1](docs/pcprev1.png)
@@ -33,10 +32,9 @@
 2. 在`album`目录下新建目录，每一个目录都是一个相册，建议使用英语名，例如：`cutecy`。
    新建一个和之前的目录名同名的.txt文件可以自定义一个好看的名称，
    例如新建`cutecy.txt`，并在该文件中保存文本作为显示在界面中的相册名（例如：`超越妹妹可可爱爱`）。在每个相册的目录都可以放入任意的图片。 
-   
-3. 如果需要密码访问该相册，在scripts目录下新建一个`password.txt`，并将密码保存到该文本文件中。   
-4. **运行 generate-jsons.py。**
-5. **在nginx的web root根目录下新建一个api目录，并将albums、album-caches以及生成的所有json文件放入该目录。**
+
+3. **运行 generate-jsons.py。** 如果需要密码访问该相册，传入参数 `--password=mypassword`。  
+4. **在nginx的web root根目录下新建一个api目录，并将albums、album-caches以及生成的所有json文件放入该目录。**
 
 注意：之后每一次更新完照片以后，都需要重新执行上述4-5步骤。
 
@@ -67,11 +65,10 @@ echo "可可爱爱">album/cutecy.txt
 # 复制图片进去
 cp /path/to/your/image/dir/*.jpg album/cutecy
 
-# 创建一个密码
-echo "mypassword">password.txt
-
 # 生成相关的文件
-python generate-jsons.py
+# -- 生成API过程中，人脸检测将会消耗更多的时间。如果不想使用人脸框居中功能，请去掉 --center_face 参数。
+# -- 如果不想使用密码功能，请去掉 --password 参数
+python generate-jsons.py --center_face --password="mypassword"
 
 # 组织生成的文件
 mkdir ../dist/api
