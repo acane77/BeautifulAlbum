@@ -14,7 +14,9 @@
       </div>
 
       <div :class="['back', 'left', 'sidebar-hidden-left', sidebar_shown_pc?'':'sidebar-hidden']" @click="raise_event_show_sidebar(true, 'pc')" style="line-height:45px; left: 18px; top: 0">
-        <span class="backtext">显示</span>
+        <span class="backtext">
+          <IconBase icon-color="white"> <IconSideBar /> </IconBase>
+        </span>
       </div>
     </div>
 
@@ -35,13 +37,16 @@
 //import IDMapping from "@/js/IDMapping";
 import '../css/style.css'
 import '../css/contentview.css'
-
 import utils from "@/js/utils";
+import IconBase from "@/icons/IconBase";
+import IconSideBar from "@/icons/IconSideBar";
+// import IconHeart from "@/icons/IconHeart";
+
 const PHOTO_PER_PAGE = 50;
 
 export default {
   name: "Content",
-  components: {},
+  components: {IconSideBar, IconBase},
   props: [ 'base_name', 'album_friendly_name', 'sidebar_shown_pc' ],
   data() {
     return {

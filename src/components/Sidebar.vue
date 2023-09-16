@@ -5,11 +5,16 @@
         照片
       </div>
       <div class="left-button-group">
-        <a class="hidden-btn" href="javascript:void(0)" @click="() => { this.raise_event_show_sidebar(false, 'mobile'); this.raise_event_show_sidebar(false, 'pc') }">隐藏</a>
+        <a class="hidden-btn" href="javascript:void(0)"
+           @click="() => {
+             this.raise_event_show_sidebar(false, 'mobile');
+             this.raise_event_show_sidebar(false, 'pc') }">
+          <IconBase icon-color="#5555ff"> <IconSideBar /> </IconBase>
+        </a>
       </div>
 
       <div class="right-button-group">
-        <a href="javascript:void(0)" @click="logout()">退出</a>
+        <a href="javascript:void(0)" @click="logout()"> <IconBase icon-color="#5555ff" height="21"> <IconExit /> </IconBase> </a>
       </div>
     </div>
 
@@ -42,9 +47,13 @@
 import '../css/style.css';
 import '../css/sidebar.css';
 import utils from "@/js/utils";
+import IconBase from "@/icons/IconBase";
+import IconSideBar from "@/icons/IconSideBar";
+import IconExit from "@/icons/IconExit";
 
 export default {
   name: "Sidebar",
+  components: {IconSideBar, IconBase, IconExit},
   data: () => ({
     album_list: [],
     selected_album_name: '/all',
