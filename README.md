@@ -33,7 +33,7 @@
    新建一个和之前的目录名同名的.txt文件可以自定义一个好看的名称，
    例如新建`cutecy.txt`，并在该文件中保存文本作为显示在界面中的相册名（例如：`超越妹妹可可爱爱`）。在每个相册的目录都可以放入任意的图片。 
 
-3. **运行 generate-jsons.py。** 如果需要密码访问该相册，传入参数 `--password=mypassword`。  
+3. **运行 generate_api.py。** 如果需要密码访问该相册，传入参数 `--password=mypassword`。  
 4. **在nginx的web root根目录下新建一个api目录，并将albums、album-caches以及生成的所有json文件放入该目录。**
 
 注意：之后每一次更新完照片以后，都需要重新执行上述4-5步骤。
@@ -68,7 +68,7 @@ cp /path/to/your/image/dir/*.jpg album/cutecy
 # 生成相关的文件
 # -- 生成API过程中，人脸检测将会消耗更多的时间。如果不想使用人脸框居中功能，请去掉 --center_face 参数。
 # -- 如果不想使用密码功能，请去掉 --password 参数
-python generate-jsons.py --center_face --password="mypassword"
+python generate_api.py --center_face --password="mypassword"
 
 # 组织生成的文件
 mkdir ../dist/api
