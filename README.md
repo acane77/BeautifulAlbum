@@ -19,6 +19,42 @@
 
 ## 如何使用？
 
+### 1. 使用bootstrap.sh脚本
+
+* **注意**：Windows用户需要使用msys2，git-bash或者WSL运行这个脚本。
+
+脚本会检查所需要的环境和依赖，如果提示缺少依赖，需要手动安装。
+
+* 编译项目，并生成API，创建一个密码为1234的相册
+```bash
+./bootstrap.sh --center-face --password=1234
+```
+
+* 不编译项目，只重新生成API（适用于更新相册）
+```bash
+./bootstrap.sh --generate-api-only --center-face --password=1234
+```
+
+* 更多参数和功能请参考帮助说明
+```bash
+usage: ./bootstrap.sh [OPTIONS] ...
+
+Options:
+    --prefix=PREFIX        指定生成最终打包的程序文件和API文档的位置
+    --album-dir=DIR        指定相册的目录（具体结构见下方说明）
+    --center-face          做人脸检测，以使人脸居中显示在主界面预览中
+    --password=PWD         指定相册的密码
+    --build-webpage-only   只编译网站项目，不生成API
+    --generate-api-only    不编译项目，只重新生成API（适用于更新相册）
+    --copy-resource        不重新编译网站，但是复制编译好的网站项目文件到--prefix指定的目录
+    --python-path=NAME     指定python命令的位置，默认：python
+    --disable-cache        在生成缩略图的时候不使用缓存，全部重新生成
+    --install-deps         安装npm依赖，相当于在项目目录运行 'npm build'
+    --help, -h             显示帮助信息
+```
+
+
+### 2. 手动构建
 
 **首先，编译Web项目**
 
