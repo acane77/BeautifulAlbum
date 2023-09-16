@@ -5,9 +5,13 @@ import json
 import pathlib
 import math
 import hashlib
+import argparse
+import face_detect
+import cv2
 
 PASSWORD_ENABLED = False
 PASSWORD_IN_MD5 = ''
+CENTER_FACE = False
 
 def get_album_path(album_name=''):
     if album_name != '':
@@ -95,11 +99,11 @@ def make_thumbnail(album_name, image_file_name):
     dst_width = 256
     dst_height = int(dst_width*height/width)
     im.thumbnail((dst_width, dst_height))
-    print('Generating thumbnail for: {}/{}'.format(album_name, image_file_name))
+    print('-- Generating thumbnail for: {}/{}'.format(album_name, image_file_name))
     try:
         im.save(cf)
     except:
-        print(" -- warning: cannot save: {}/{}".format(album_name, image_file_name))
+        print("   warning: cannot save: {}/{}".format(album_name, image_file_name))
     im.close()
     return width, height
 
@@ -122,6 +126,7 @@ def generate_photo_by_page(image_data, filename_callback):
     ##  /api/get-recent-photo-count.json  相片数量
     ##  /api/get-recent-photo-page-{num}.json  生成缩略图并获取每一页的相片列表
 def generate_json_album_related(album_name=''):
+    global CENTER_FACE
     if album_name == '':
         album_names = get_album_list()
         image_objs = []
@@ -146,7 +151,18 @@ def generate_json_album_related(album_name=''):
                 continue
             fd = pathlib.Path('{}{}'.format(get_album_path(album_name), pf))
             ctime = fd.stat().st_ctime
-            image_data.append({ "al": album_name, "name": pf, "h": height, "w": width, "ct": ctime })
+            image_meta = {
+                "al": album_name,
+                "name": pf,
+                "h": height,
+                "w": width,
+                "ct": ctime
+            }
+            if CENTER_FACE:
+                img_src = cv2.imread('{}{}'.format(get_album_path(album_name), pf))
+                faces = face_detect.face_detection(img_src)
+                image_meta["faces"] = [ [ int(el) for el in rect[:4] ] for rect in faces ]
+            image_data.append(image_meta)
     # 生成相片数量
     count_obj = { "count": len(image_data) }
     write_json_file("{}-get-photo-count.json".format(album_name), count_obj)
@@ -159,10 +175,10 @@ def MD5(str):
     hl.update(str.encode(encoding='utf-8'))
     return hl.hexdigest()
 
-def check_for_password():
+def check_for_password(password):
     global PASSWORD_ENABLED, PASSWORD_IN_MD5
-    if os.path.isfile("password.txt"):
-        password = read_file("password.txt")
+    if password != "":
+        print('Password is enabled')
         write_json_file("password.json", {"enabled": True})
         PASSWORD_ENABLED = True
         PASSWORD_IN_MD5 = MD5(password)
@@ -173,8 +189,20 @@ def check_for_password():
     else:
         write_json_file("password.json", {"enabled": False})
 
+
 if __name__ == '__main__':
-    check_for_password()
+    parser = argparse.ArgumentParser(description="Generate JSON APIs")
+    parser.add_argument("--center_face", action='count',
+                        help="Run face detection to make faces always in center in preview mode")
+    parser.add_argument("--password", type=str, default="",
+                        help="Specify a password for API")
+    args = parser.parse_args()
+
+    CENTER_FACE = args.center_face
+    print("-- Face detection: ", 'ON' if CENTER_FACE else 'OFF')
+    print('-- Password for API: ', 'ON' if args.password != "" else 'OFF')
+
+    check_for_password(args.password)
 
     # 生成相册列表  /api/get-album.json
     generate_json__get_album()
@@ -184,3 +212,4 @@ if __name__ == '__main__':
     ##  /api/{album_name}-get-photo-page-{num}.json  生成缩略图并获取每一页的相片列表
     generate_json_album_related()
 
+    print('-- Finished!')
