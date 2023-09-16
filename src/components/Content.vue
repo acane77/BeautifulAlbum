@@ -13,7 +13,8 @@
         <i class="larrow" style="border-color: white"></i><span class="backtext">照片</span>
       </div>
 
-      <div :class="['back', 'left', 'sidebar-hidden-left', sidebar_shown_pc?'':'sidebar-hidden']" @click="raise_event_show_sidebar(true, 'pc')" style="line-height:45px; left: 18px; top: 0">
+      <div :class="['back', 'left', 'sidebar-hidden-left', sidebar_shown_pc?'':'sidebar-hidden']"
+           @click="raise_event_show_sidebar(true, 'pc')" style="line-height:45px; left: 18px; top: 0">
         <span class="backtext">
           <IconBase icon-color="white"> <IconSideBar /> </IconBase>
         </span>
@@ -26,8 +27,19 @@
                 backgroundImage: `url('${ get_thumbnail_image(photo.al, photo.name) }')`,
                 backgroundPosition: get_thumbnail_image_backgrouod_pos(photo)
               }"
-            @click="raise_event_show_preview(photo.name, photo_list, i, photo.al, photo)"
       >
+        <div class="photo-mask" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%;"
+             @click="raise_event_show_preview(photo.name, photo_list, i, photo.al, photo)"
+        >
+        </div>
+        <div class="fav-btn" :style="{
+                position: 'absolute', left: '20px', top: '20px',
+                display: photo.fav ? 'block' : ''
+              }"
+             @click="switchFavState(photo)" >
+          <IconBase icon-color="white" v-if="!photo.fav"> <IconHeart /> </IconBase>
+          <IconBase icon-color="white" v-else> <IconHeartFilled /> </IconBase>
+        </div>
       </div>
     </div>
   </div>
@@ -40,13 +52,14 @@ import '../css/contentview.css'
 import utils from "@/js/utils";
 import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";
-// import IconHeart from "@/icons/IconHeart";
+import IconHeart from "@/icons/IconHeart";
+import IconHeartFilled from "@/icons/IconHeartFilled";
 
 const PHOTO_PER_PAGE = 50;
 
 export default {
   name: "Content",
-  components: {IconSideBar, IconBase},
+  components: { IconSideBar, IconBase, IconHeart, IconHeartFilled },
   props: [ 'base_name', 'album_friendly_name', 'sidebar_shown_pc' ],
   data() {
     return {
@@ -56,6 +69,7 @@ export default {
       photo_list: [],
       initial_scroll_height: 0,
       response_load_new: true,
+      fav_content_cache: {},
     }
   },
   computed: {
@@ -73,12 +87,12 @@ export default {
     },
     album_get_image_at_current_page_json_name() {
       return this.album_common_prefix + "page-" + String(this.current_page_to_load);
-    },
+    }
   },
   watch: {
     base_name() {
       this.initialize();
-    }
+    },
   },
   created() {},
   async mounted() {
@@ -100,6 +114,7 @@ export default {
       if (this.current_page_to_load >= this.page_count)
         return;
       this.photo_list.push(...await utils.get_secured_json(this.album_get_image_at_current_page_json_name));
+      this.applyFavoriteWithPhotos(); // TODO: 性能优化：先执行着一条语句再加入photolist
       this.current_page_to_load++;
     },
     get_thumbnail_image(alumn_name ,image_name) {
@@ -169,6 +184,81 @@ export default {
       if((el.srcElement.offsetHeight + el.srcElement.scrollTop) >= el.srcElement.scrollHeight - this.initial_scroll_height) {
         this.load_image()
       }
+    },
+
+    // Favorite
+    isFavorite(photo) {
+      return photo.fav
+    },
+    /// 用于获取收藏夹对应的key
+    getFavoriteStorageKey(photo) {
+      return `${photo.al}/${photo.name}`;
+    },
+    /// 用于获取Local Storage对应的key
+    getFavoriteLocalStorageKey(photo) {
+      return `album_fav_${photo.al}`;
+    },
+    /// 用于获取local Storage中所有的key
+    getFavoriteLocalStorageAllKeys() {
+      let keys = []
+      for (let i = 0, len = localStorage.length; i < len ; ++i) {
+        let _key = localStorage.key(i);
+        if (_key.startsWith("album_fav_"))
+          keys.push(_key);
+      }
+      return keys;
+    },
+    loadAllFavoriteItems() {
+      this.fav_content_cache = {};
+      let keys = this.getFavoriteLocalStorageAllKeys();
+      console.log(keys)
+      for (let i = 0; i < keys.length; i++) {
+        this.fav_content_cache[keys[i]] = JSON.parse(localStorage.getItem(keys[i]));
+      }
+    },
+    applyFavoriteWithPhotos() {
+      this.loadAllFavoriteItems();
+      for (let i=0; i<this.photo_list.length; i++) {
+        let key = this.getFavoriteStorageKey(this.photo_list[i]);
+        let al_key = this.getFavoriteLocalStorageKey(this.photo_list[i]);
+        console.log('-- Favorite item:', key);
+        if (typeof this.fav_content_cache[al_key] == "undefined")
+          continue;
+        if (typeof this.fav_content_cache[al_key][key] == "undefined")
+          continue;
+        this.photo_list[i].fav = true;
+
+      }
+      this.$forceUpdate();
+    },
+    saveFavoriteState(photo) {
+      let key = this.getFavoriteStorageKey(photo);
+      let al_key = this.getFavoriteLocalStorageKey(photo);
+      if (typeof this.fav_content_cache[al_key] == "undefined") {
+        this.fav_content_cache[al_key] = {}
+      }
+      if (photo.fav) {
+        // Add to favorite
+        this.fav_content_cache[al_key][key] = photo;
+      }
+      else {
+        // Remove from favorite
+        delete this.fav_content_cache[al_key][key];
+      }
+      let localstorage = window.localStorage;
+      if (typeof localstorage === "undefined") {
+        alert('你的浏览器不支持Local Storage，无法使用此功能。');
+        return;
+      }
+      // Save as <key, value> to local storage
+      localstorage.setItem(
+          al_key,
+          JSON.stringify(this.fav_content_cache[al_key]));
+    },
+    switchFavState(photo) {
+      photo.fav = !photo.fav;
+      this.$forceUpdate();
+      this.saveFavoriteState(photo)
     }
   }
 }
@@ -176,5 +266,16 @@ export default {
 </script>
 
 <style scoped>
+.fav-btn {
+  display: none;
+  cursor: pointer;
+}
 
+.photo-mask:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.photo.box:hover >.fav-btn {
+  display: block;
+}
 </style>

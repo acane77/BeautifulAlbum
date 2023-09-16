@@ -4,7 +4,6 @@
     :width="width"
     :height="height"
   >
-    <title :id="iconName" lang="en">{{ iconName }} icon</title>
     <g :fill="iconColor">
       <slot />
     </g>
@@ -15,10 +14,6 @@
 export default {
   name: "IconBase.vue",
   props: {
-    iconName: {
-      type: String,
-      default: "heart",
-    },
     width: {
       type: [Number, String],
       default: 25,
