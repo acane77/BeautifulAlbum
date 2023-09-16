@@ -70,6 +70,7 @@ export default {
       initial_scroll_height: 0,
       response_load_new: true,
       fav_content_cache: {},
+      fav_page_cache: null
     }
   },
   computed: {
@@ -113,8 +114,17 @@ export default {
       setTimeout(() => { this.response_load_new = true; }, 1000)
       if (this.current_page_to_load >= this.page_count)
         return;
-      this.photo_list.push(...await utils.get_secured_json(this.album_get_image_at_current_page_json_name));
-      this.applyFavoriteWithPhotos(); // TODO: 性能优化：先执行着一条语句再加入photolist
+      if (this.album_get_count_json_name.startsWith("get-fav-photo-")) {
+        let max_i = Math.min(this.photo_list.length + PHOTO_PER_PAGE, this.fav_page_cache.length);
+        for (let i=this.photo_list.length; i < max_i; i++) {
+          this.photo_list.push(this.fav_page_cache[i]);
+        }
+      }
+      else {
+        this.photo_list.push(...await utils.get_secured_json(this.album_get_image_at_current_page_json_name));
+        this.applyFavoriteWithPhotos(); // TODO: 性能优化：先执行着一条语句再加入photolist
+      }
+
       this.current_page_to_load++;
     },
     get_thumbnail_image(alumn_name ,image_name) {
@@ -160,6 +170,7 @@ export default {
       }
       // return '1px 1px';
     },
+
     async initialize() {
       if (this.base_name === "")
         return;
@@ -169,8 +180,29 @@ export default {
       this.response_load_new = true;
       this.initial_scroll_height = 0;
       this.photo_count = this.page_count = 0;
+
       // get page count
-      this.photo_count = (await utils.get_secured_json(this.album_get_count_json_name)).count;
+      if (this.album_get_count_json_name.startsWith("get-fav-photo-")) {
+        // not loaded
+        if (this.fav_page_cache == null || this.current_page_to_load == 0) {
+          this.fav_page_cache = [];
+          this.loadAllFavoriteItems();
+          // console.log(this.fav_content_cache)
+          for (let key1 in this.fav_content_cache) {
+            // console.log(key1)
+            for (let key2 in this.fav_content_cache[key1]) {
+              this.fav_page_cache.push(this.fav_content_cache[key1][key2]);
+            }
+          }
+        }
+        this.photo_count = this.fav_page_cache.length;
+
+        // console.log("-- Favorite album count:", this.photo_count);
+      }
+      else {
+        this.photo_count = (await utils.get_secured_json(this.album_get_count_json_name)).count;
+      }
+      //this.photo_count = this.get_page_count(this.album_get_count_json_name);
       this.page_count = Math.ceil(this.photo_count / PHOTO_PER_PAGE);
 
       // load page 0 first
@@ -211,7 +243,7 @@ export default {
     loadAllFavoriteItems() {
       this.fav_content_cache = {};
       let keys = this.getFavoriteLocalStorageAllKeys();
-      console.log(keys)
+      // console.log(keys)
       for (let i = 0; i < keys.length; i++) {
         this.fav_content_cache[keys[i]] = JSON.parse(localStorage.getItem(keys[i]));
       }
@@ -221,13 +253,12 @@ export default {
       for (let i=0; i<this.photo_list.length; i++) {
         let key = this.getFavoriteStorageKey(this.photo_list[i]);
         let al_key = this.getFavoriteLocalStorageKey(this.photo_list[i]);
-        console.log('-- Favorite item:', key);
         if (typeof this.fav_content_cache[al_key] == "undefined")
           continue;
         if (typeof this.fav_content_cache[al_key][key] == "undefined")
           continue;
         this.photo_list[i].fav = true;
-
+        // console.log('-- Favorite item:', key);
       }
       this.$forceUpdate();
     },
