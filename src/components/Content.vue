@@ -33,7 +33,7 @@
         >
         </div>
         <div class="fav-btn" :style="{
-                position: 'absolute', left: '20px', top: '20px',
+                position: 'absolute', left: '20px', bottom: '20px',
                 display: photo.fav ? 'block' : ''
               }"
              @click="switchFavState(photo)" >
