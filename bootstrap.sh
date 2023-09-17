@@ -30,21 +30,30 @@ function print_help() {
   cat <<EOF
 usage: $__PROG [OPTIONS] ...
 
-Options:
+Common Options for Installation
     --prefix=PREFIX        Path to generate APIs, can be also used to update current file.
                              Default: $(pwd)/install
     --album-dir=DIR        Path to album directory, store the original images
                              Default: PREFIX/album
+
+Options for Building Project
+    --build-webpage-only   Only build webpage, do not generate APIs
+    --release              Make a tar.gz package for built project to release
+
+Options for Generating APIs
+    --generate-api-only    Only generate APIs
     --center-face          Perform face detection while generating API, to center the faces in
                            preview mode.
     --password=PWD         Password for accessing the album
-    --build-webpage-only   Only build webpage, do not generate APIs
-    --generate-api-only    Only generate APIs
     --copy-resource        Copy built website resources to PREFIX directory
+    --disable-cache        Do not use cache when generating thumbnails
+
+Options for Environment
     --python-path=NAME     Specify path to python3 binary
                              Default: python
-    --disable-cache        Do not use cache when generating thumbnails
     --install-deps         Install npm deps
+
+Other Options
     --help, -h             Print this help message and exit
 EOF
 }
@@ -72,6 +81,8 @@ function parse_args() {
         F_PASSWORD="$1"
       elif [ "$KEY" == "--copy-resource" ]; then
         CONFIG_COPY_RES=1
+      elif [ "$KEY" == "--release" ]; then
+        CONFIG_RELEASE=1
       elif [ "$KEY" == "--help" ] || [ "$KEY" == "-h" ]; then
         print_help
         exit 0
@@ -123,7 +134,9 @@ function check_python_dep_installed() {
 
 function check_for_env() {
   echo "-- Checking environment for building..."
-  check_npm_installed
+  if [ -f package.json ]; then
+    check_npm_installed
+  fi
   check_python_dep_installed
 
   # Check install prefix
@@ -174,8 +187,43 @@ function copy_website_files() {
   cp -r dist/* "$CONFIG_PREFIX/"
 }
 
+function build_release_package() {
+  if [ "$CONFIG_RELEASE" == "" ]; then
+    return;
+  fi
+  echo "-- Building package for release ..."
+  RELEASE_DATE="$(date "+%Y%m%d")"
+  PRODUCT_PREFIX=BeautifulAlbum
+  COMMIT_ID="$(git rev-parse --short HEAD)"
+  RELEASE_NAME="${PRODUCT_PREFIX}-${COMMIT_ID}-${RELEASE_DATE}"
+  rm -rf ./$RELEASE_NAME
+  mkdir -p $RELEASE_NAME
+  mkdir -p $RELEASE_NAME/scripts
+
+  ## Copy resources into package
+  cp -r dist $RELEASE_NAME/
+  cp $__PROG $RELEASE_NAME/
+  cp ./scripts/*.py $RELEASE_NAME/scripts/
+  cp README.md $RELEASE_NAME/
+  cp LICENSE $RELEASE_NAME/
+  FACE_DETECT_MODEL="$(cat scripts/face_detect.py |grep face_detection_config|grep third_party|head -1|grep -oEi "third_party.*?xml")"
+  mkdir -p $RELEASE_NAME/$(dirname "$FACE_DETECT_MODEL")
+  cp $FACE_DETECT_MODEL $RELEASE_NAME/$(dirname "$FACE_DETECT_MODEL")/
+
+  ## Make package
+  zip -ry $RELEASE_NAME.zip $RELEASE_NAME
+  __assert "make package failed"
+  rm -rf ./$RELEASE_NAME
+  echo "-- Package built: $(realpath RELEASE_NAME.zip)"
+}
+
 function build_website() {
   if [ "$CONFIG_GENERATE_API_ONLY" != "" ]; then
+    return 0;
+  fi
+  if [ ! -f package.json ]; then
+    echo "-- Already a production package, no need to build"
+    copy_website_files
     return 0;
   fi
   if [ "$CONFIG_INSTALL_DEPS" != "" ]; then
@@ -210,7 +258,9 @@ function build_api() {
   fi
   $PYTHON generate_api.py $F_CENTER_FACE $F_PASSWORD
   __assert "API generate failed"
-  rm ../third_party
+  if [ ! -d ../third_party ]; then
+    rm ../third_party
+  fi
   echo "-- API Generated!"
   cd "$__CURRENT_DIR"
 }
@@ -219,9 +269,11 @@ function main() {
   parse_args $*
   check_for_env
   build_website
-  if [ "$CONFIG_COPY_RES" != "" ]; then
+  # Copy resources if specified or if in production mode
+  if [ "$CONFIG_COPY_RES" != "" ] || [ ! -f package.json ]; then
     copy_website_files
   fi
+  build_release_package
   build_api
 
   echo "-- All finished! "
