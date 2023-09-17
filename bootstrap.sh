@@ -136,6 +136,11 @@ function check_for_env() {
   fi
   echo "-- Installation prefix: $CONFIG_PREFIX"
 
+  if [ "$CONFIG_BUILD_WEBPAGE_ONLY" != "" ]; then
+    echo "-- Build project only, will not check for album"
+    return 0
+  fi
+
   # Check album list
   if [ "$CONFIG_ALBUM_DIR" == "" ]; then
     CONFIG_ALBUM_DIR="$CONFIG_PREFIX/album"
