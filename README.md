@@ -19,20 +19,67 @@
 
 ## 如何使用？
 
-### 1. 使用bootstrap.sh脚本
+### 方式1、 使用bootstrap.sh脚本自动化构建
 
 * **注意**：Windows用户需要使用msys2，git-bash或者WSL运行这个脚本。
 
+**Step 1. 组织相册**
+
+在任意地方新建一个一个目录，作为相册目录，例如 `~/my_album`
+
+在这个相册目录下，按照下面的规则组织相册：
+
+1. 每一个子目录都是一个相册，建议使用英语名，例如：`cutecy`。
+2. 新建一个和之前的目录名同名的.txt文件可以自定义一个好看的名称。例如新建`cutecy.txt`，并在该文件中保存文本作为显示在界面中的相册名（例如：`超越妹妹可可爱爱`）。
+3. 在每个相册的目录都可以放入任意的图片。 
+
+一个组织好的目录结构如下
+
+``` 
+~/my_album
+├── cutecy
+│   ├── 1.jpg
+│   └── 2.jpg
+├── cutecy.txt
+├── photos
+│   ├── IMG_0001.jpg
+│   └── IMG_0002.jpg
+└── photos.txt
+```
+
+**Step 2. 运行脚本**
+
 脚本会检查所需要的环境和依赖，如果提示缺少依赖，需要手动安装。
+
+* 通过 `--prefix` 参数传入你想要生成API的目标目录，例如 `/mnt/data/wwwroot`
+* 通过 `--album-dir` 参数传入上面步骤创建的相册目录，例如 `~/my_album`
+
+常用的使用方法如下：
 
 * 编译项目，并生成API，创建一个密码为1234的相册
 ```bash
-./bootstrap.sh --center-face --password=1234
+./bootstrap.sh --center-face \
+               --password=1234 \
+               --prefix=/mnt/data/wwwroot \
+               --album-dir=~/my_album
 ```
 
 * 不编译项目，只重新生成API（适用于更新相册）
 ```bash
-./bootstrap.sh --generate-api-only --center-face --password=1234
+./bootstrap.sh --generate-api-only \
+               --center-face \
+               --password=1234 \
+               --prefix=/mnt/data/wwwroot \
+               --album-dir=~/my_album
+```
+
+* 只编译项目，不重新生成API（适用于更新程序）
+```bash 
+./bootstrap.sh --build-webpage-only \
+               --center-face \
+               --password=1234 \
+               --prefix=/mnt/data/wwwroot \
+               --album-dir=~/my_album
 ```
 
 * 更多参数和功能请参考帮助说明
@@ -54,7 +101,7 @@ Options:
 ```
 
 
-### 2. 手动构建
+### 方式2、 手动构建
 
 **首先，编译Web项目**
 
