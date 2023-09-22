@@ -6,7 +6,25 @@
       </div>
       <div class="title right">
         <span style="color: #eee; margin-right: 10px;">{{ photo_count }}张图片</span>
-        <button>共享</button>
+        <button @click="menu_more_is_shown = !menu_more_is_shown" style="">...</button>
+        <!-- 弹出的菜单 -->
+        <div class="context-menu-mask" v-show="menu_more_is_shown" @click="menu_more_is_shown = false"></div>
+        <div :class="['context-menu', menu_more_is_shown?'shown':'hidden']" v-show="menu_more_is_shown" style="top: 56px; right: 20px">
+          <a href="javascript:void(0)"
+             @click="current_zoom_scale < 2 && ((current_zoom_scale++), (menu_more_is_shown = false))"
+             :aria-disabled="current_zoom_scale >= 2">放大</a>
+          <a href="javascript:void(0)"
+             @click="current_zoom_scale > -6 && ((current_zoom_scale--), (menu_more_is_shown = false))"
+             :aria-disabled="current_zoom_scale <= -6">缩小</a>
+          <a href="javascript:void(0)"
+             @click="current_zoom_scale != 0 && ((current_zoom_scale = 0), (menu_more_is_shown = false))"
+             :aria-disabled="current_zoom_scale == 0">默认缩放 (当前：{{ current_zoom_scale }})</a>
+          <hr />
+          <a href="javascript:void(0)" aria-disabled="true">分享...</a>
+          <hr v-show="base_name === '/fav'" />
+          <a href="javascript:void(0)" aria-disabled="true" v-show="base_name === '/fav'">导出个人收藏</a>
+          <a href="javascript:void(0)" aria-disabled="true" v-show="base_name === '/fav'">导入个人收藏</a>
+        </div>
 
       </div>
       <div class="back left"   style="line-height:45px; left: 18px; top: 0" @click="raise_event_show_sidebar(true, 'mobile')">
@@ -22,7 +40,7 @@
     </div>
 
     <div>
-      <div class="photo box" v-for="(photo, i) in photo_list" :photo-name="photo.name" :key="i"
+      <div :class="['photo', 'box', 'scale-ratio-ratio-' + current_zoom_scale]" v-for="(photo, i) in photo_list" :photo-name="photo.name" :key="i"
            :style="{
                 backgroundImage: `url('${ get_thumbnail_image(photo.al, photo.name) }')`,
                 backgroundPosition: get_thumbnail_image_backgrouod_pos(photo)
@@ -49,6 +67,8 @@
 //import IDMapping from "@/js/IDMapping";
 import '../css/style.css'
 import '../css/contentview.css'
+import '../css/content_scale.css'
+import '../css/menu.css'
 import utils from "@/js/utils";
 import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";
@@ -70,7 +90,10 @@ export default {
       initial_scroll_height: 0,
       response_load_new: true,
       fav_content_cache: {},
-      fav_page_cache: null
+      fav_page_cache: null,
+      // UI Element -- Menu
+      menu_more_is_shown: false,
+      current_zoom_scale: 0,
     }
   },
   computed: {

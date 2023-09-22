@@ -85,6 +85,7 @@ div.navbar {
     border-bottom: 1px solid #ddd;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    z-index: 10000;
 }
 
 @media screen and (min-width: 1400px) {

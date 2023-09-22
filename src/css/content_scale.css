@@ -1,0 +1,41 @@
+/* this file contains styles for scale function */
+
+/*  default: width > 1100px */
+.box.scale-ratio-ratio--6 {  width:    10%;           }
+.box.scale-ratio-ratio--5 {  width:    10%;           }
+.box.scale-ratio-ratio--4 {  width:    10%;           }
+.box.scale-ratio-ratio--3 {  width:    10%;           }
+.box.scale-ratio-ratio--2 {  width:    14.28571428%;  }
+.box.scale-ratio-ratio--1 {  width:    16.66666666%;  }
+.box.scale-ratio-ratio-1  {  width:    25%;           }
+.box.scale-ratio-ratio-2  {  width:    33.33333333%;  }
+.box.scale-ratio-ratio-3  {  width:    50%;           }
+
+@media screen and (max-width: 960px) {
+    .box.scale-ratio-ratio--4 {  width:    10%;           }
+    .box.scale-ratio-ratio--3 {  width:    14.28571428%;  }
+    .box.scale-ratio-ratio--2 {  width:    16.66666666%;  }
+    .box.scale-ratio-ratio--1 {  width:    20%;           }
+    .box.scale-ratio-ratio-1  {  width:    33.33333333%;  }
+    .box.scale-ratio-ratio-2  {  width:    50%;           }
+}
+
+@media screen and (max-width: 720px) {
+    .box.scale-ratio-ratio--5 {  width:    10%;           }
+    .box.scale-ratio-ratio--4 {  width:    14.28571428%;  }
+    .box.scale-ratio-ratio--3 {  width:    16.66666666%;  }
+    .box.scale-ratio-ratio--2 {  width:    20%;           }
+    .box.scale-ratio-ratio--1 {  width:    25%;           }
+    .box.scale-ratio-ratio-1  {  width:    50%;           }
+    .box.scale-ratio-ratio-2  {  width:    100%;          }
+}
+
+@media screen and (max-width: 480px) {
+    .box.scale-ratio-ratio--6 {  width:    10%;           }
+    .box.scale-ratio-ratio--5 {  width:    14.28571428%;  }
+    .box.scale-ratio-ratio--4 {  width:    16.66666666%;  }
+    .box.scale-ratio-ratio--3 {  width:    20%;           }
+    .box.scale-ratio-ratio--2 {  width:    25%;           }
+    .box.scale-ratio-ratio--1 {  width:    50%;           }
+    .box.scale-ratio-ratio-1  {  width:    100%;          }
+}

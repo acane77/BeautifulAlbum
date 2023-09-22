@@ -142,7 +142,7 @@ div.photo {
 @media screen and (max-width: 720px) {
     .box {
         position: relative;
-        width:    33%; /* desired width */
+        width:    33.33333333%; /* desired width */
     }
 }
 
