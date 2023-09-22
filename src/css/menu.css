@@ -24,7 +24,7 @@
 }
 
 .context-menu.shown {
-    opacity: 100%;
+    opacity: 1;
 }
 
 .context-menu.hidden {
