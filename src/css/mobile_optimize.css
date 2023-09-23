@@ -1,0 +1,55 @@
+/* Optimize listview */
+
+.listview a:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+.listview.normal-menu-ui a:active {
+    background: #5555ff;
+    color: white;
+}
+
+@media screen and (max-width: 500px) {
+    .listview a.selected {
+        background: aliceblue !important;
+        color: black !important;
+    }
+
+    .listview .album-prev {
+        display: inline-block;
+        width: 40vw;
+        height: 50vw;
+        margin-left: 3vw;
+        margin-bottom: 10px;
+        line-height: initial;
+    }
+
+    .listview .album-prev .list_img {
+        display: block;
+        width: 40vw;
+        height: 40vw;
+    }
+    .listview .album-prev span {
+        margin-left: 0 !important;
+        margin-top: calc(40vw + 13px);
+        display: inline-block;
+        font-size: 0.9em;
+    }
+
+}
+
+/* for extractly small screens */
+@media screen and (max-width: 330px) {
+    .listview .album-prev {
+        width: 90vw;
+        height: 100vw;
+    }
+
+    .listview .album-prev .list_img {
+        width: 80vw;
+        height: 80vw;
+    }
+
+    .listview .album-prev span {
+        margin-top: calc(80vw + 13px);
+    }
+}

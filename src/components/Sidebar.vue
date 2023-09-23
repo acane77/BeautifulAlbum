@@ -22,7 +22,7 @@
       照片
     </div>
 
-    <div class="listview" style="margin-top: 5px;">
+    <div class="listview normal-menu-ui" style="margin-top: 5px;">
       <a :class="get_css_class_list_item('/all')" @click="on_switch_album('/all', '图库')" href="javascript:void(0)"><span>图库</span></a>
       <a :class="get_css_class_list_item('/recent')" @click="on_switch_album('/recent', '最近项目')" href="javascript:void(0)"><span>最近项目</span></a>
       <a :class="get_css_class_list_item('/fav')" @click="on_switch_album('/fav', '个人收藏')" href="javascript:void(0)"><span>个人收藏</span></a>
@@ -32,7 +32,7 @@
       我的相簿
     </div>
     <div class="listview">
-      <a :class="get_css_class_list_item(album.name)" @click="on_switch_album(album.name, album.friendly_name)"  href="javascript:void(0)" v-for="album in album_list" :key="album.name">
+      <a :class="[ 'album-prev', get_css_class_list_item(album.name) ]" @click="on_switch_album(album.name, album.friendly_name)"  href="javascript:void(0)" v-for="album in album_list" :key="album.name">
         <div style="position: relative">
           <div class="list_img" :style="{ backgroundImage: album.preview==='' ? '':'url(\'/api/album-cache/' + album.name + '/' + album.preview + '\')' }"></div>
           <span style="margin-left: 27px;">{{ album.friendly_name }}</span>
@@ -46,6 +46,7 @@
 <script>
 import '../css/style.css';
 import '../css/sidebar.css';
+import '../css/mobile_optimize.css'
 import utils from "@/js/utils";
 import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";
