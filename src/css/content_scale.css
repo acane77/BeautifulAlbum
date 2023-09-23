@@ -1,5 +1,9 @@
 /* this file contains styles for scale function */
 
+.photo.box {
+    transition: width 0.2s;
+}
+
 /*  default: width > 1100px */
 .box.scale-ratio-ratio--6 {  width:    10%;           }
 .box.scale-ratio-ratio--5 {  width:    10%;           }

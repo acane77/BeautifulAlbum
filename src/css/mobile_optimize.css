@@ -3,6 +3,11 @@
 .listview a:hover {
     background: rgba(255, 255, 255, 0.3);
 }
+@media (prefers-color-scheme: dark) {
+    .listview a:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+}
 .listview.normal-menu-ui a:active {
     background: #5555ff;
     color: white;
@@ -10,7 +15,7 @@
 
 @media screen and (max-width: 500px) {
     .listview a.selected {
-        background: aliceblue !important;
+        background: transparent !important;
         color: black !important;
     }
 

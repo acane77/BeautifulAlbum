@@ -47,6 +47,7 @@
 import '../css/style.css';
 import '../css/sidebar.css';
 import '../css/mobile_optimize.css'
+import '../css/dark_theme.css'
 import utils from "@/js/utils";
 import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";

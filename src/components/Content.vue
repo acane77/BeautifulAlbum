@@ -69,6 +69,7 @@ import '../css/style.css'
 import '../css/contentview.css'
 import '../css/content_scale.css'
 import '../css/menu.css'
+import '../css/dark_theme.css'
 import utils from "@/js/utils";
 import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";

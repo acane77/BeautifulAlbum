@@ -16,6 +16,7 @@
 
     border-radius: 5px;
     border: 1px solid #aaa;
+
     background: rgba(200, 200, 200, 0.8);
     backdrop-filter: blur(10px);
     padding: 5px 3px 5px 3px;
@@ -57,5 +58,11 @@
 
 .context-menu hr {
     border: none;
-    border-bottom: 1px solid #888;
+    border-bottom: 1px solid #aaa;
+}
+
+@media (prefers-color-scheme: dark) {
+    .context-menu hr {
+        border-bottom: 1px solid #555;
+    }
 }

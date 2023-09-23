@@ -1,0 +1,52 @@
+@media (prefers-color-scheme: dark) {
+    /* Main Container */
+    .content-container {
+        background-color: #111 !important;
+    }
+
+    /* Nav bar */
+    div.navbar {
+        background-color: rgba(0, 0, 0,0.8);
+        border-bottom: 1px solid #222;
+        color: white;
+    }
+
+    /* Side bar */
+    .sidebar-container {
+        background: #000 !important;
+        color: #fff;
+    }
+
+    .list_img {
+        background-color: black;
+    }
+
+    .listview a,
+    .listview a.selected {
+        color: white !important;
+    }
+
+    /* Menu */
+    .context-menu {
+        border:   1px solid #777 !important;
+        background: rgba(80, 80, 80, 0.8) !important;
+    }
+
+    .context-menu a {
+        color: #fff !important;
+    }
+
+    .context-menu a[aria-disabled] {
+        color: #888 !important;
+    }
+
+    /* Elements */
+    .cnav button {
+        background: rgba(80, 80, 80, 0.8) !important;
+        border-bottom: 1px solid #222 !important;
+    }
+
+    .preview-with-navbar {
+        background: #000 !important;
+    }
+}
