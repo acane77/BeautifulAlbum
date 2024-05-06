@@ -136,8 +136,10 @@ export default {
       }
       this.response_load_new = false;
       setTimeout(() => { this.response_load_new = true; }, 1000)
-      if (this.current_page_to_load >= this.page_count)
+      if (this.current_page_to_load >= this.page_count) {
+        this.response_load_new = true;
         return;
+      }
       if (this.album_get_count_json_name.startsWith("get-fav-photo-")) {
         let max_i = Math.min(this.photo_list.length + PHOTO_PER_PAGE, this.fav_page_cache.length);
         for (let i=this.photo_list.length; i < max_i; i++) {
@@ -150,6 +152,7 @@ export default {
       }
 
       this.current_page_to_load++;
+      this.response_load_new = true;
     },
     get_thumbnail_image(alumn_name ,image_name) {
       return "/api/album-cache/" + alumn_name + "/" + image_name;
