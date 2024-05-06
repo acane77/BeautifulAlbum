@@ -226,7 +226,7 @@ function build_website() {
     copy_website_files
     return 0;
   fi
-  if [ "$CONFIG_INSTALL_DEPS" != "" ]; then
+  if [ "$CONFIG_INSTALL_DEPS" != "" ] || [ ! -d node_modules ]; then
     echo "-- Installing NPM deps ..."
     npm install
     __assert "install NPM deps failed"
