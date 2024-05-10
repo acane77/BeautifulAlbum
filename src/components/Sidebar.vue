@@ -22,7 +22,7 @@
       照片
     </div>
 
-    <div class="listview normal-menu-ui" style="margin-top: 5px;">
+    <div v-show="show_banner" class="listview normal-menu-ui" style="margin-top: 5px;">
       <a :class="get_css_class_list_item('/all')" @click="on_switch_album('/all', '图库')" href="javascript:void(0)"><span>图库</span></a>
       <a :class="get_css_class_list_item('/recent')" @click="on_switch_album('/recent', '最近项目')" href="javascript:void(0)"><span>最近项目</span></a>
       <a :class="get_css_class_list_item('/fav')" @click="on_switch_album('/fav', '个人收藏')" href="javascript:void(0)"><span>个人收藏</span></a>
@@ -59,6 +59,7 @@ export default {
   data: () => ({
     album_list: [],
     selected_album_name: '/all',
+    show_banner: true,
 
     shouldShowSemiTransparentNavBar: false,
   }),
@@ -88,6 +89,13 @@ export default {
     },
     async getAlbumList() {
       this.album_list = await utils.get_secured_json('get-album')
+    },
+    async getAlbumListForShare(album_hash) {
+      window.share_album_hash = album_hash;
+      let album_info = { name: "/share", friendly_name: "共享的相册", preview: "" };
+      this.album_list = [ album_info ];
+      this.show_banner = false;
+      this.on_switch_album(album_info["name"], album_info["friendly_name"]);
     },
     logout() {
       localStorage.removeItem('password');

@@ -210,7 +210,7 @@ def generate_json_album_related(album_name=''):
             image_data.append(image_meta)
     # 生成相片数量
     album_name_hash = create_hash_name_from_album_name(album_name)
-    count_obj = { "count": len(image_data), "hash": album_name_hash }
+    count_obj = { "count": len(image_data), "hash": album_name_hash, "name": album_name }
     write_json_file("{}-get-photo-count.json".format(album_name), count_obj)
     write_shared_json_file("{}-get-photo-count.json".format(album_name_hash), count_obj)
     HASH2ALBUM[album_name_hash] = album_name

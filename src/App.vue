@@ -72,6 +72,28 @@ export default {
     },
 
     async checkPassword(pwd) {
+      // check if is share link
+      if (window.is_share_link) {
+        let album_hash = utils.md5_transform(window.share_id, pwd);
+        console.log("share id:  ", window.share_id);
+        console.log("password:  ", pwd);
+        console.log("album_hash:", album_hash);
+
+        try {
+          await utils.get_json(`shared/${album_hash}-get-photo-count`);
+          this.$refs.password_input.feedback(true);
+          this.password_input_shown = false;
+
+          this.initialize_for_share(album_hash); // initialize for share link
+        }
+        catch (ee) {
+          this.requirePassword();
+          this.$refs.password_input.feedback(false);
+        }
+        return;
+      }
+
+      // is a normal login
       window.miyuki_password = pwd
       window.enabled_password = true;
       try {
@@ -93,6 +115,13 @@ export default {
 
       this.contentAlbumName = "/all";
       this.contentFriendlyName = "图库";
+    },
+
+    initialize_for_share(album_hash) {
+      this.$refs.sidebar.getAlbumListForShare(album_hash);
+
+      this.contentAlbumName = "/share";
+      this.contentFriendlyName = "共享的相册";
     }
   },
   async mounted() {
@@ -100,8 +129,36 @@ export default {
       this.sidebar_shown_on_mobile_mode = true;
 
     // Check if password enabled
-    let password_enabled = await utils.get_json('password');
-    password_enabled = password_enabled.enabled;
+    let password_enabled;
+
+    function parse_args() {
+      let _args = {};
+      let args = location.href.split("?")[1];
+      if (typeof args == "undefined")
+        return _args;
+      args.split('&').forEach(function(item) {
+        var s = item.split('=');
+        _args[s[0]] = s[1];
+      });
+      return _args;
+    }
+    let _args = parse_args();
+
+    // check if is a share link
+    window.is_share_link = typeof _args["shared_id"] !== "undefined";
+    window.share_id = String(_args["shared_id"]).padEnd(32, "0")
+    password_enabled = window.is_share_link;
+
+    if (window.is_share_link) {
+      // clear stored password if is a share link
+      localStorage.removeItem('password');
+    }
+
+    if (!window.is_share_link) {
+      password_enabled = await utils.get_json('password');
+      password_enabled = password_enabled.enabled;
+    }
+
     let __TRUE__ = true;
     if (password_enabled) {
       if (localStorage.getItem("password") !== null) {

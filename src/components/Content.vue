@@ -20,7 +20,9 @@
              @click="current_zoom_scale != 0 && ((current_zoom_scale = 0), (menu_more_is_shown = false))"
              :aria-disabled="current_zoom_scale == 0">默认缩放 (当前：{{ current_zoom_scale }})</a>
           <hr />
-          <a href="javascript:void(0)" aria-disabled="true">分享...</a>
+          <a href="javascript:void(0)"
+             @click="shareAlbumClick()"
+             :aria-disabled="!share_enabled">分享...</a>
           <hr v-show="base_name === '/fav'" />
           <a href="javascript:void(0)" aria-disabled="true" v-show="base_name === '/fav'">导出个人收藏</a>
           <a href="javascript:void(0)" aria-disabled="true" v-show="base_name === '/fav'">导入个人收藏</a>
@@ -75,6 +77,7 @@ import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";
 import IconHeart from "@/icons/IconHeart";
 import IconHeartFilled from "@/icons/IconHeartFilled";
+let md5 = require('js-md5');
 
 const PHOTO_PER_PAGE = 50;
 
@@ -88,6 +91,7 @@ export default {
       current_page_to_load: 0,
       photo_count: 0,
       photo_list: [],
+      album_hash: '',
       initial_scroll_height: 0,
       response_load_new: true,
       fav_content_cache: {},
@@ -95,6 +99,7 @@ export default {
       // UI Element -- Menu
       menu_more_is_shown: false,
       current_zoom_scale: 0,
+      share_enabled: false,
     }
   },
   computed: {
@@ -104,7 +109,9 @@ export default {
       if (this.base_name === '/recent')
         return 'get-recent-photo-';
       if (this.base_name === '/fav')
-        return 'get-fav-photo-'; /// NOT: load from localstorage
+        return 'get-fav-photo-'; // load from localstorage
+      if (this.base_name === "/share")
+        return 'get-shared-photo-'; // load from another URL
       return this.base_name + '-get-photo-';
     },
     album_get_count_json_name() {
@@ -145,6 +152,17 @@ export default {
         for (let i=this.photo_list.length; i < max_i; i++) {
           this.photo_list.push(this.fav_page_cache[i]);
         }
+      }
+      else if (this.album_get_count_json_name.startsWith("get-shared-photo-")) {
+        let share_album_hash = window.share_album_hash;
+        if (typeof window.share_album_hash === 'undefined') {
+          throw Error('share_album_hash not defined');
+        }
+        console.log("share_album_hash", share_album_hash);
+
+        this.photo_list.push(
+            ...await utils.get_json(`shared/${share_album_hash}-get-photo-page-${String(this.current_page_to_load)}`));
+        // Note: disable favorite feature in the sharing mode
       }
       else {
         this.photo_list.push(...await utils.get_secured_json(this.album_get_image_at_current_page_json_name));
@@ -207,6 +225,8 @@ export default {
       this.response_load_new = true;
       this.initial_scroll_height = 0;
       this.photo_count = this.page_count = 0;
+      // this.share_enabled = false; // do not update state
+      this.album_hash = ''
 
       // get page count
       if (this.album_get_count_json_name.startsWith("get-fav-photo-")) {
@@ -223,11 +243,29 @@ export default {
           }
         }
         this.photo_count = this.fav_page_cache.length;
+        this.share_enabled = false; // disable share for favorite
+        this.album_hash = '';
 
         // console.log("-- Favorite album count:", this.photo_count);
       }
+      // get shared photo count
+      if (this.album_get_count_json_name.startsWith("get-shared-photo-")) {
+        let share_album_hash = window.share_album_hash;
+        if (typeof window.share_album_hash === 'undefined') {
+          throw Error('share_album_hash not defined');
+        }
+        console.log("share_album_hash", share_album_hash);
+        let album_config = await utils.get_json(`shared/${share_album_hash}-get-photo-count`);
+        this.photo_count = album_config.count;
+        this.album_hash = ''; // do not allow share for shared album
+        this.share_enabled = false; // do not allow share for shared album
+      }
+      // get normal album
       else {
-        this.photo_count = (await utils.get_secured_json(this.album_get_count_json_name)).count;
+        let album_config = (await utils.get_secured_json(this.album_get_count_json_name));
+        this.photo_count = album_config.count;
+        this.album_hash = album_config.hash;
+        this.share_enabled = typeof album_config.hash !== "undefined"
       }
       //this.photo_count = this.get_page_count(this.album_get_count_json_name);
       this.page_count = Math.ceil(this.photo_count / PHOTO_PER_PAGE);
@@ -317,6 +355,29 @@ export default {
       photo.fav = !photo.fav;
       this.$forceUpdate();
       this.saveFavoriteState(photo)
+    },
+
+    // Share album feature
+    shareAlbumClick() {
+      if (typeof this.album_hash === "undefined" || this.album_hash === "") {
+        return;
+      }
+      let password = prompt("请输入分享密码");
+      let password_hash = md5(password);
+      console.log("password hash:", password_hash);
+      console.log("album hash:   ", this.album_hash);
+      let en = utils.md5_transform(this.album_hash, password_hash);
+      let de = utils.md5_transform(en, password_hash);
+      console.log("encrypted:    ", en);
+      console.log("decrypted:    ", de);
+      let shared_url = location.href.split("?")[0].split("#")[0] + "?shared_id=" + en;
+      let message = ("分享链接为：" + shared_url + "\n\n" +
+            "将这个链接发送给其他人即可分享该相册。" +
+            "获得该分享链接的人需要输入分享密码方可查看。\n" +
+            "无需将相册的访问密码提供给对方。\n\n" +
+            "注意：如果想要对方的取消访问权限，请使用项目提供的工具重新生成分享API。");
+      console.log(message);
+      alert(message);
     }
   }
 }

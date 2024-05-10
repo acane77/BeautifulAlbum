@@ -31,8 +31,22 @@ function get_json(url) {
     })
 }
 
+function md5_transform(a, b) {
+    if (a.length !== 32 || b.length !== 32) {
+        throw new Error('Both MD5 strings must be 32 characters long.');
+    }
+
+    var c = Array(32).fill(0);
+    for (let i=0; i<32; i++) {
+        let _a = Number.parseInt(a[i], 16);
+        let _b = Number.parseInt(b[i], 16);
+        c[i] = (_a ^ _b).toString(16);
+    }
+    return c.join('');
+}
 
 export default {
     get_secured_json: get_secured_json,
-    get_json: get_json
+    get_json: get_json,
+    md5_transform: md5_transform,
 }
