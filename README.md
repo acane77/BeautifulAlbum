@@ -97,6 +97,8 @@ Options:
     --python-path=NAME     指定python命令的位置，默认：python
     --disable-cache        在生成缩略图的时候不使用缓存，全部重新生成
     --install-deps         安装npm依赖，相当于在项目目录运行 'npm build'
+    --disable-share        禁用“分享”功能，不生成相关的API
+    --use-symlink          生成用于“分享”功能的API时，使用符号链接而不是拷贝文件
     --help, -h             显示帮助信息
 ```
 
@@ -152,6 +154,9 @@ cp /path/to/your/image/dir/*.jpg album/cutecy
 # -- 生成API过程中，人脸检测将会消耗更多的时间。如果不想使用人脸框居中功能，请去掉 --center_face 参数。
 # -- 如果不想使用密码功能，请去掉 --password 参数
 python generate_api.py --center_face --password="mypassword"
+
+# 生成用于分享的API
+bash ./build_hash2lib.sh
 
 # 组织生成的文件
 mkdir ../dist/api

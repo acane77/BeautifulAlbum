@@ -8,10 +8,17 @@ import hashlib
 import argparse
 import face_detect
 import cv2
+import time
 
 PASSWORD_ENABLED = False
 PASSWORD_IN_MD5 = ''
 CENTER_FACE = False
+ENABLE_SHARED = True
+
+HASH2ALBUM = {}
+
+ENUM_API_TYPE_NORMAL = "normal"
+ENUM_API_TYPE_ALIAS = "alias"
 
 def get_album_path(album_name=''):
     if album_name != '':
@@ -38,8 +45,21 @@ def write_json_file(path, obj):
     global PASSWORD_ENABLED, PASSWORD_IN_MD5
     if PASSWORD_ENABLED:
         path = "{}/{}".format(PASSWORD_IN_MD5, path)
+    print('-- Generating album API: {}'.format(path))
     with open(path, 'w', encoding='utf8') as file:
         file.write(json.dumps(obj))
+
+def write_shared_json_file(path, obj):
+    if not ENABLE_SHARED:
+        return
+    shared_filename = "shared/" + path  # path can be "xxx/zzz.json"
+    shared_base_dir = os.path.dirname(shared_filename)
+    if not os.path.exists(shared_base_dir):
+        os.mkdir(shared_base_dir)
+    print('-- Generating shared album API: {}'.format(shared_filename))
+    with open(shared_filename, 'w') as fp:
+        fp.write(json.dumps(obj))
+
 
 def read_file(path):
     try:
@@ -60,6 +80,11 @@ def get_album_list():
             album_names.append(f)
             create_cache_dir(f)
     return album_names
+
+
+def create_hash_name_from_album_name(album_name):
+    time_str = time.strftime("%Y%m%d%H%M%S")
+    return MD5(album_name + time_str)
 
 
 ## 生成 /api/get-album.json
@@ -115,8 +140,28 @@ def generate_photo_by_page(image_data, filename_callback):
         for i in range(page*photo_for_each_page, min(len(image_data), (page+1)*photo_for_each_page)):
             ph_obj.append(image_data[i])
         #write_json_file("{}-get-photo-page-{}.json".format(album_name, page), ph_obj)
-        filename = filename_callback(page)
-        write_json_file(filename, ph_obj)
+        def __run_filename_callback(cb):
+            filename = cb(page)
+            if type(filename) is list or type(filename) is tuple:
+                filename, api_type = filename[0], filename[1]
+            else:
+                # Default ENUM_API_TYPE_NORMAL
+                filename, api_type = filename, ENUM_API_TYPE_NORMAL
+
+            if api_type == ENUM_API_TYPE_NORMAL:
+                write_json_file(filename, ph_obj)
+            elif api_type == ENUM_API_TYPE_ALIAS:
+                write_shared_json_file(filename, ph_obj)
+            else:
+                raise RuntimeError("Not supported api type: {}".format(api_type))
+
+        if type(filename_callback) is not list:
+            filename_callback = [filename_callback]
+
+        for cb in filename_callback:
+            __run_filename_callback(cb)
+        # filename = filename_callback(page)
+        # write_json_file(filename, ph_obj)
 
 # 相片
     ##  /api/{album_name}-get-photo-count.json  相片数量
@@ -164,9 +209,20 @@ def generate_json_album_related(album_name=''):
                 image_meta["faces"] = [ [ int(el) for el in rect[:4] ] for rect in faces ]
             image_data.append(image_meta)
     # 生成相片数量
-    count_obj = { "count": len(image_data) }
+    album_name_hash = create_hash_name_from_album_name(album_name)
+    count_obj = { "count": len(image_data), "hash": album_name_hash }
     write_json_file("{}-get-photo-count.json".format(album_name), count_obj)
-    generate_photo_by_page(image_data, lambda page: "{}-get-photo-page-{}.json".format(album_name, page))
+    write_shared_json_file("{}-get-photo-count.json".format(album_name_hash), count_obj)
+    HASH2ALBUM[album_name_hash] = album_name
+
+    def _generate_shared_album_name(page):
+        return "{}-get-photo-page-{}.json".format(album_name_hash, page), ENUM_API_TYPE_ALIAS
+
+    generate_photo_by_page(image_data,
+                           [
+                               lambda page: "{}-get-photo-page-{}.json".format(album_name, page),
+                               _generate_shared_album_name
+                           ])
 
     return image_data
 
@@ -178,11 +234,11 @@ def MD5(str):
 def check_for_password(password):
     global PASSWORD_ENABLED, PASSWORD_IN_MD5
     if password != "":
-        print('Password is enabled')
-        write_json_file("password.json", {"enabled": True})
+        print('-- Password is enabled')
+        write_json_file("password.json", {"enabled": True, "share_enabled": ENABLE_SHARED})
         PASSWORD_ENABLED = True
         PASSWORD_IN_MD5 = MD5(password)
-        print('Password enabled: hash value is {}'.format(PASSWORD_IN_MD5))
+        print('-- Password hash value is {}'.format(PASSWORD_IN_MD5))
         # 创建具有密码的目录
         if not os.path.isdir("./{}".format(PASSWORD_IN_MD5)):
             os.mkdir("./{}".format(PASSWORD_IN_MD5))
@@ -194,13 +250,23 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate JSON APIs")
     parser.add_argument("--center_face", action='count',
                         help="Run face detection to make faces always in center in preview mode")
+    parser.add_argument("--disable_share", action='count',
+                        help="Disable share album with others")
     parser.add_argument("--password", type=str, default="",
                         help="Specify a password for API")
     args = parser.parse_args()
 
     CENTER_FACE = args.center_face
+    ENABLE_SHARED = not args.disable_share
+
     print("-- Face detection: ", 'ON' if CENTER_FACE else 'OFF')
     print('-- Password for API: ', 'ON' if args.password != "" else 'OFF')
+    print('-- Share enabled: ', ENABLE_SHARED)
+
+    # remove previous shared directory
+    import shutil
+    if os.path.exists("shared"):
+        shutil.rmtree('shared')
 
     check_for_password(args.password)
 
@@ -212,4 +278,9 @@ if __name__ == '__main__':
     ##  /api/{album_name}-get-photo-page-{num}.json  生成缩略图并获取每一页的相片列表
     generate_json_album_related()
 
-    print('-- Finished!')
+    # Temp file
+    if ENABLE_SHARED:
+        with open("hash2album.txt", "w") as h2a_file:
+            h2a_file.write("\n".join([ "{}:{}".format(k, v) for k, v in HASH2ALBUM.items() ]))
+
+    print('-- Generate API Finished!')

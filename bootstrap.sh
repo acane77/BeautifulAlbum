@@ -47,6 +47,8 @@ Options for Generating APIs
     --password=PWD         Password for accessing the album
     --copy-resource        Copy built website resources to PREFIX directory
     --disable-cache        Do not use cache when generating thumbnails
+    --disable-share        Disable share album API
+    --use-symlink          Generate share API using symbolic link instead of copying files
 
 Options for Environment
     --python-path=NAME     Specify path to python3 binary
@@ -77,6 +79,10 @@ function parse_args() {
         CONFIG_INSTALL_DEPS=1
       elif [ "$KEY" == "--center-face" ]; then
         F_CENTER_FACE="--center_face"
+      elif [ "$KEY" == "--disable-share" ]; then
+        F_DISABLE_SHARE="--disable_share"
+      elif [ "$KEY" == "--use-symlink" ]; then
+        USE_SYMLINK=1
       elif [ "$KEY" == "--password" ]; then
         F_PASSWORD="$1"
       elif [ "$KEY" == "--copy-resource" ]; then
@@ -238,6 +244,29 @@ function build_website() {
   copy_website_files
 }
 
+function build_hash2album() {
+  if [ "$F_DISABLE_SHARE" != "" ]; then
+    return 0
+  fi
+  while read line; do
+    HASH_="$(echo "$line"|cut -f 1 -d ":")"
+    ALBUM_="$(echo "$line"|cut -f 2 -d ":")"
+    echo "-- Creating alias for album: $ALBUM_, hash: $HASH_"
+    mkdir -p "shared/album" "shared/album-cache"
+    if [ "$USE_SYMLINK" != "" ]; then
+      ln -s "../album/$ALBUM_" "shared/album/$HASH_"
+      ln -s "../album-cache/$ALBUM_" "shared/album-cache/$HASH_"
+    else
+      cp -r "album/$ALBUM_" "shared/album/$HASH_"
+      cp -r "album-cache/$ALBUM_" "shared/album-cache/$HASH_"
+    fi
+  done <<EOF
+$(cat hash2album.txt)
+EOF
+
+  rm -rf hash2album.txt
+}
+
 function build_api() {
   if [ "$CONFIG_BUILD_WEBPAGE_ONLY" != "" ]; then
     return 0
@@ -256,12 +285,15 @@ function build_api() {
   if [ ! -e ../third_party ]; then
     ln -s "$__CURRENT_DIR/third_party" ../third_party
   fi
-  $PYTHON generate_api.py $F_CENTER_FACE $F_PASSWORD
+  $PYTHON generate_api.py $F_CENTER_FACE $F_DISABLE_SHARE $F_PASSWORD
   __assert "API generate failed"
   if [ ! -d ../third_party ]; then
     rm ../third_party
   fi
   echo "-- API Generated!"
+
+  build_hash2album
+
   cd "$__CURRENT_DIR"
 }
 
