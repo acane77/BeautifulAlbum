@@ -24,7 +24,8 @@
              @click="shareAlbumClick()"
              :aria-disabled="!share_enabled">分享...</a>
           <hr v-show="base_name === '/fav'" />
-          <a href="javascript:void(0)" aria-disabled="true" v-show="base_name === '/fav'">导出个人收藏</a>
+          <a href="javascript:void(0)" v-show="base_name === '/fav'"
+            @click="exportFavClick()">导出个人收藏</a>
           <a href="javascript:void(0)" aria-disabled="true" v-show="base_name === '/fav'">导入个人收藏</a>
         </div>
 
@@ -430,6 +431,22 @@ export default {
       this.share_url = location.href.split("?")[0].split("#")[0] + "?shared_id=" + en;
       this.share_password = "";
     },
+    exportFavClick() {
+      this.menu_more_is_shown = false;
+      let keys = this.getFavoriteLocalStorageAllKeys();
+      console.log("export fav:", keys);
+      let save_content = {};
+      for (let i = 0; i < keys.length; i++) {
+        save_content[keys[i]] = localStorage.getItem(keys[i]);
+      }
+      let filename = "export_favorite_" + utils.get_current_time_f() + ".json"
+      utils.download_text_as_file(JSON.stringify(save_content), filename);
+    },
+    importFavClick() {
+      this.menu_more_is_shown = false;
+
+
+    }
   }
 }
 
