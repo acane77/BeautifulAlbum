@@ -72,10 +72,44 @@ function GetCurrentTimeFormatted() {
     return `${year}${month}${date}_${hours}${minutes}${seconds}`;
 }
 
+function GetFileContent(ext='.txt') {
+    return new Promise((resolve, reject) => {
+        // 创建一个新的input元素
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = ext; // 可以根据需要更改接受的文件类型
+
+        // 设置文件选择后的事件处理
+        fileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const text = e.target.result; // 文件内容
+                    resolve(text); // 调用回调函数并传递文件内容
+                };
+                reader.onerror = function(e) {
+                    reject(e.target.error); // 调用回调函数并传递错误信息
+                };
+                reader.readAsText(file); // 读取文件内容
+            } else {
+                reject(new Error('No file selected.')); // 如果没有选择文件，则返回错误
+            }
+        });
+
+        // 触发点击事件（必须由用户手动触发，不能模拟）
+        fileInput.click();
+
+        // 如果需要，可以将fileInput添加到DOM中，但这通常不是必需的，因为我们只关心文件内容
+        // document.body.appendChild(fileInput);
+    });
+}
+
 export default {
     get_secured_json: get_secured_json,
     get_json: get_json,
     md5_transform: md5_transform,
     download_text_as_file: DownloadTextAsFile,
     get_current_time_f: GetCurrentTimeFormatted,
+    get_file_content: GetFileContent,
 }

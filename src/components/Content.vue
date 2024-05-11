@@ -19,14 +19,15 @@
           <a href="javascript:void(0)"
              @click="current_zoom_scale != 0 && ((current_zoom_scale = 0), (menu_more_is_shown = false))"
              :aria-disabled="current_zoom_scale == 0">默认缩放 (当前：{{ current_zoom_scale }})</a>
-          <hr />
-          <a href="javascript:void(0)"
+          <hr v-show="base_name[0] !== '/'" />
+          <a href="javascript:void(0)" v-show="base_name[0] !== '/'"
              @click="shareAlbumClick()"
              :aria-disabled="!share_enabled">分享...</a>
           <hr v-show="base_name === '/fav'" />
           <a href="javascript:void(0)" v-show="base_name === '/fav'"
             @click="exportFavClick()">导出个人收藏</a>
-          <a href="javascript:void(0)" aria-disabled="true" v-show="base_name === '/fav'">导入个人收藏</a>
+          <a href="javascript:void(0)" v-show="base_name === '/fav'"
+            @click="importFavClick()">导入个人收藏</a>
         </div>
 
       </div>
@@ -442,9 +443,52 @@ export default {
       let filename = "export_favorite_" + utils.get_current_time_f() + ".json"
       utils.download_text_as_file(JSON.stringify(save_content), filename);
     },
-    importFavClick() {
+    async importFavClick() {
       this.menu_more_is_shown = false;
 
+      function _check(o) {
+        if (typeof o === "undefined") {
+          throw new Error("object is undefined");
+        }
+      }
+
+      try {
+        let fav_json = await utils.get_file_content(".json")
+        fav_json = JSON.parse(fav_json)
+        console.log(fav_json);
+
+        // Check if is valid favorite
+        let fav = {};
+        let k0 = Object.keys(fav_json);
+        console.log(k0)
+        for (let i=0; i<k0.length; i++) {
+          let fal = JSON.parse(fav_json[k0[i]]);
+
+          // check for each item
+          let falk = Object.keys(fal);
+          for (let j=0; j < falk.length; j++) {
+            let al = fal[falk[j]];
+            // console.log(al)
+            _check(al["al"])
+            _check(al["name"])
+            _check(al["h"])
+            _check(al["w"])
+            _check(al["ct"])
+          }
+        }
+
+        for (let i=0; i<k0.length; i++) {
+          let fal = fav_json[k0[i]];
+          console.log("Import favorite: ", k0[i], fal)
+          window.localStorage.setItem(k0[i], fal);
+        }
+
+        this.initialize(); // reload favorite
+      }
+      catch (ee) {
+        console.log(ee);
+        alert("选择的文件无法识别！");
+      }
 
     }
   }
