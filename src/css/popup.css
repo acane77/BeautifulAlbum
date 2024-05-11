@@ -1,0 +1,259 @@
+.popd {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    z-index: 10086;
+    background: rgba(0,0,0,0.8);
+}
+
+.popd .dialog {
+    position: absolute;
+    margin: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    -ms-transform: translateY(-50%) translateX(-50%);
+    -moz-transform: translateY(-50%) translateX(-50%);
+    -webkit-transform: translateY(-50%) translateX(-50%);
+    left: 50%;
+    /* height: 220px; */
+    width: 400px;
+    border: 1px solid #ccc;
+    background: rgba(233,233,233,0.9);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    -webkit-box-shadow: 2px 3px 24px -8px rgba(0,0,0,0.5);
+    -moz-box-shadow: 2px 3px 24px -8px rgba(0,0,0,0.5);
+    box-shadow: 2px 3px 24px -8px rgba(0,0,0,0.5);
+    font-size: 12px;
+}
+
+.popd .dialog {
+    border-radius: 5px;
+}
+
+.popd .dialog .title {
+    height: 35px;
+    line-height: 35px;
+    border-bottom: 1px solid #ccc;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+    font-weight: bold;
+}
+
+.popd .dialog .ctnt {
+    min-height: 1px;
+    margin: 0 auto;
+    width: 300px;
+    padding: 20px;
+    font-size: 13px;
+    text-align: center;
+}
+
+.popd .dialog .ctnt * {
+    font-size: 13px;
+}
+
+.popd .dialog .cbgroup {
+    height: 40px;
+    line-height: 35px;
+    border-top: 1px solid #ccc;
+    padding-left: 10px;
+    font-size: 14px;
+    color: #333;
+    margin: 0;
+    font-weight: bold;
+}
+
+.popd .dialog input[type=text],
+.popd .dialog input[type=password],
+.popd .dialog input[type=button],
+.popd .dialog input[type=submit],
+.popd .dialog button {
+    height: 20px;
+    background: rgba(100,100,100,0.5);
+    border: 0;
+    border-radius: 10px;
+    outline: none;
+    padding: 3px;
+    font-size: 13px;
+}
+
+.popd .dialog input[type=text]:hover,
+.popd .dialog input[type=password]:hover{
+    background: rgba(100,100,100,0.6);
+}
+
+.popd .dialog input[type=text]:active,
+.popd .dialog input[type=password]:active,
+.popd .dialog input[type=button]:active,
+.popd .dialog input[type=submit]:active,
+.popd .dialog button:active {
+    background: rgba(100,100,100,0.8);
+}
+
+
+.popd .dialog input[type=text],
+.popd .dialog input[type=password] {
+    width: 100%;
+    border-radius: 7px;
+    padding: 6px;
+}
+
+.popd .dialog input[type=button].primary,
+.popd .dialog input[type=submit].primary,
+.popd .dialog button.primary {
+    padding: 5px 5px 5px 5px;
+    height: initial;
+    color: white;
+    /*background: #5555ff;*/
+}
+
+.popd .dialog .cbgroup input[type=button],
+.popd .dialog .cbgroup input[type=submit],
+.popd .dialog .cbgroup button {
+    padding: 5px 5px 5px 5px;
+    height: initial;
+    color: white;
+    /*background: #5555ff;*/
+    border-radius: 3px;
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.popd .dialog  ::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+    color: #888;
+    opacity: 1; /* Firefox */
+}
+
+.popd .dialog  :-ms-input-placeholder { /* Internet Explorer 10-11 */
+    color: #888;
+}
+
+.popd .dialog  ::-ms-input-placeholder { /* Microsoft Edge */
+    color: #888;
+}
+.popd .dialog input[type=button].primary:active,
+.popd .dialog input[type=submit].primary:active,
+.popd .dialog button.primary:active {
+    background: #8888ff;
+}
+
+.popd .dialog input[type=button].primary:disabled,
+.popd .dialog input[type=submit].primary:disabled,
+.popd .dialog button.primary:disabled {
+    background: #888;
+}
+
+.popd .dialog .ctnt {
+    width: initial !important;
+}
+
+@media screen and (max-width: 500px) {
+    .popd .dialog {
+        transform: none;
+        -ms-transform: none;
+        -moz-transform: none;
+        -webkit-transform: none;
+        top: initial;
+        bottom: 0;
+        left: 0;
+        border-radius: 0;
+        border: none;
+        border-top: 1px solid #aaa;
+        width: 100%;
+    }
+
+    .popd .dialog .title {
+        font-size: 16px;
+        height: 45px;
+        line-height: 45px;
+        text-align: center;
+    }
+
+    .popd .dialog {
+        height: 98%;
+    }
+
+    .popd .dialog .ctnt * {
+        font-size: 15px !important;
+    }
+
+    .popd .dialog input[type=button],
+    .popd .dialog input[type=submit],
+    .popd .dialog button.primary {
+        font-size: 16px !important;
+        padding-top: 7px;
+        padding-bottom: 7px;
+    }
+
+    .popd .dialog .cbgroup {
+        position: absolute;
+        width: 100%;
+        padding-left: 0;
+        top: 0;
+        border-top: none;
+    }
+
+    .popd .dialog .cbgroup input[type=button],
+    .popd .dialog .cbgroup input[type=submit],
+    .popd .dialog .cbgroup button,
+    .popd .dialog .cbgroup input[type=button]:hover,
+    .popd .dialog .cbgroup input[type=submit]:hover,
+    .popd .dialog .cbgroup button:hover,
+    .popd .dialog .cbgroup input[type=button]:active,
+    .popd .dialog .cbgroup input[type=submit]:active,
+    .popd .dialog .cbgroup button:active{
+        padding: 5px 5px 5px 5px;
+        height: initial;
+        color: #5555ff;
+        font-weight: bold;
+        background: transparent;
+        border-radius: 3px;
+        font-size: 17px;
+        margin-top: 3px;
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .popd .dialog .cbgroup input[type=button]:active,
+    .popd .dialog .cbgroup input[type=submit]:active,
+    .popd .dialog .cbgroup button:active {
+        color: #8888ff;
+    }
+
+    .popd .dialog {
+        background: #fff;
+        font-weight: normal;
+        border-top-left-radius: 10px;
+        border-top-right-radius: 10px;
+    }
+
+    .popd .dialog .ctnt {
+        font-size: 16px !important;
+        width: initial !important;
+        padding: 30px 25px 30px 25px;
+    }
+
+    .popd .dialog input[type=text],
+    .popd .dialog input[type=password] {
+        border: 1px solid #ccc;
+        background: #fff;
+    }
+
+    .popd .dialog input[type=text]:hover,
+    .popd .dialog input[type=password]:hover {
+        border: 1px solid #ddd;
+        background: #eee;
+    }
+
+    .popd .dialog input[type=text]:active,
+    .popd .dialog input[type=password]:active {
+        border: 1px solid #ddd;
+        background: #eee;
+    }
+}

@@ -62,6 +62,46 @@
         </div>
       </div>
     </div>
+
+    <div class="dialog-container" v-show="popup_dialog_shown">
+      <PopupDialog ref="popup_dialog"
+                   title="分享相册"
+                   @complete-click="() => { popup_dialog_shown = false; }"
+      >
+        <div v-show="share_dialog_phase === 1 && share_enabled">
+          <!-- (1) 设置分享密码 -->
+          <p>
+            共享相册：<span style="font-weight: bold">{{ album_friendly_name }}</span>
+          </p>
+          <p>设置分享密码：</p>
+          <p>
+            <input type="password"
+                   v-model="share_password"
+                   style="width: calc(100% - 15px)"
+                   ref="password_input" >
+          </p>
+          <span class="mbutton-group" style="text-align: center; display: block">
+            <button class="primary large_button primary_btn"
+                    @click="shareButtonClick()" >分享</button>
+          </span>
+        </div>
+        <div v-show="share_dialog_phase === 2 && share_enabled">
+          <!-- (2) 分享结果 -->
+          <p>分享链接为：</p>
+          <pre class="share_url">{{ share_url }}</pre>
+          <p>
+            将这个链接发送给其他人即可分享该相册，无需将相册的访问密码提供给对方。
+            获得该分享链接的人需要输入分享密码方可查看。
+          </p>
+          <p>
+            如果想要取消对方的访问权限，请使用项目提供的工具重新生成分享API。
+          </p>
+        </div>
+        <div v-show="!share_enabled">
+          <p>不能分享该相册。</p>
+        </div>
+      </PopupDialog>
+    </div>
   </div>
 </template>
 
@@ -77,13 +117,14 @@ import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";
 import IconHeart from "@/icons/IconHeart";
 import IconHeartFilled from "@/icons/IconHeartFilled";
+import PopupDialog from "@/components/PopupDialog";
 let md5 = require('js-md5');
 
 const PHOTO_PER_PAGE = 50;
 
 export default {
   name: "Content",
-  components: { IconSideBar, IconBase, IconHeart, IconHeartFilled },
+  components: { IconSideBar, IconBase, IconHeart, IconHeartFilled, PopupDialog },
   props: [ 'base_name', 'album_friendly_name', 'sidebar_shown_pc' ],
   data() {
     return {
@@ -100,6 +141,11 @@ export default {
       menu_more_is_shown: false,
       current_zoom_scale: 0,
       share_enabled: false,
+      // Share dialog
+      popup_dialog_shown: false,
+      share_dialog_phase: 1,
+      share_password: "",
+      share_url: "",
     }
   },
   computed: {
@@ -138,6 +184,7 @@ export default {
       this.$emit('preview-photo', image_file_name, photo_list, photo_index, album_name, photo_obj);
     },
     async load_image() {
+      // console.log("load album:", this.album_get_count_json_name)
       if (!this.response_load_new) {
         return;
       }
@@ -226,9 +273,10 @@ export default {
       this.initial_scroll_height = 0;
       this.photo_count = this.page_count = 0;
       // this.share_enabled = false; // do not update state
-      this.album_hash = ''
+      this.album_hash = '';
 
       // get page count
+      // console.log("get photo count: ", this.album_get_count_json_name);
       if (this.album_get_count_json_name.startsWith("get-fav-photo-")) {
         // not loaded
         if (this.fav_page_cache == null || this.current_page_to_load == 0) {
@@ -249,7 +297,7 @@ export default {
         // console.log("-- Favorite album count:", this.photo_count);
       }
       // get shared photo count
-      if (this.album_get_count_json_name.startsWith("get-shared-photo-")) {
+      else if (this.album_get_count_json_name.startsWith("get-shared-photo-")) {
         let share_album_hash = window.share_album_hash;
         if (typeof window.share_album_hash === 'undefined') {
           throw Error('share_album_hash not defined');
@@ -362,23 +410,26 @@ export default {
       if (typeof this.album_hash === "undefined" || this.album_hash === "") {
         return;
       }
-      let password = prompt("请输入分享密码");
-      let password_hash = md5(password);
+      this.share_dialog_phase = 1;
+      this.popup_dialog_shown = true;
+      this.$refs.password_input.focus();
+      this.menu_more_is_shown = false;
+    },
+    shareButtonClick() {
+      if (this.share_password === "") {
+        return;
+      }
+      let password_hash = md5(this.share_password);
       console.log("password hash:", password_hash);
       console.log("album hash:   ", this.album_hash);
       let en = utils.md5_transform(this.album_hash, password_hash);
       let de = utils.md5_transform(en, password_hash);
       console.log("encrypted:    ", en);
       console.log("decrypted:    ", de);
-      let shared_url = location.href.split("?")[0].split("#")[0] + "?shared_id=" + en;
-      let message = ("分享链接为：" + shared_url + "\n\n" +
-            "将这个链接发送给其他人即可分享该相册。" +
-            "获得该分享链接的人需要输入分享密码方可查看。\n" +
-            "无需将相册的访问密码提供给对方。\n\n" +
-            "注意：如果想要对方的取消访问权限，请使用项目提供的工具重新生成分享API。");
-      console.log(message);
-      alert(message);
-    }
+      this.share_dialog_phase = 2;
+      this.share_url = location.href.split("?")[0].split("#")[0] + "?shared_id=" + en;
+      this.share_password = "";
+    },
   }
 }
 
@@ -396,5 +447,73 @@ export default {
 
 .photo.box:hover >.fav-btn {
   display: block;
+}
+
+div.dialog-container {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 100%;
+  z-index: 19999;
+}
+
+button.large_button {
+  width: 100px;
+}
+
+button.primary_btn,
+button.primary_btn:hover {
+  border: 1px solid #5555ff;
+  background-color: #5555ff;
+}
+button.primary_btn:active {
+  border: 1px solid #000088 !important;
+  background-color: #000088 !important;
+}
+
+pre.share_url {
+  user-select: all;
+  text-wrap: wrap;
+  color: blue;
+  background: #fff;
+  padding: 10px;
+  border-radius: 5px;
+}
+pre.share_url:hover {
+  text-decoration: underline;
+}
+
+@media screen and (max-width: 500px) {
+  button.large_button {
+    width: 100%;
+  }
+
+  button.primary_btn,
+  pre.share_url {
+    background-color: transparent;
+    border: 1px solid #fff;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+    border-radius: 0;
+    color: #000 !important;
+    padding-left: 15px !important;
+    height: 40px !important;
+    text-align: left;
+    color: #5555ff !important;
+  }
+  button.primary_btn:hover {
+    border: 1px solid #eee !important;
+    background-color: #eee !important;
+  }
+  button.primary_btn:active {
+    border: 1px solid #ddd !important;
+    background-color: #ddd !important;
+  }
+
+  .mbutton-group {
+    border-radius: 6px;
+  }
 }
 </style>
