@@ -39,4 +39,22 @@ class DeepfaceDetector(FaceDetectorBase):
                    face['facial_area']['w'], face['facial_area']['h']]
                  for face in face_objs if face["confidence"] > 0.5 ]
 
+    def get_face_embedding(self, image_path: str) -> [[float]]:
+        try:
+            embedding_objs = DeepFace.represent(
+                img_path=image_path,
+                detector_backend=self._model,
+                align=False,
+                enforce_detection=False
+            )
+        except ValueError as ex:
+            print("-- DeepfaceDetector WARNING: {}".format(str(ex)))
+            embedding_objs = []
+        # print(embedding_objs)
+        return [ {
+            "embedding": face["embedding"],
+            "rect":  [ face['facial_area']['x'], face['facial_area']['y'], face['facial_area']['w'], face['facial_area']['h']]
+        } for face in embedding_objs if face["face_confidence"] > 0.5 ]
+
+
 DetectorImpl = DeepfaceDetector

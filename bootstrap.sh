@@ -50,6 +50,7 @@ Options for Generating APIs
     --face-detector-model=MODEL_NAME
                            Specify face detector model, for detailed list of accepted values,
                            see README.md.
+    --face-clustering      Generate "People" APIs (need parameter search for best performance)
     --password=PWD         Password for accessing the album
     --copy-resource        Copy built website resources to PREFIX directory
     --disable-cache        Do not use cache when generating thumbnails
@@ -92,6 +93,8 @@ function parse_args() {
       elif [ "$KEY" == "--face-detector" ]; then
         F_FACE_DETECTOR="--face_detector=${1:16}"
         CONFIG_FACE_DETECTOR_BACKEND="${1:16}"
+      elif [ "$KEY" == "--face-clustering" ]; then
+        F_FACE_CLUSTERING="--face_clustering"
       elif [ "$KEY" == "--face-detector-model" ]; then
         F_FACE_DETECTOR_MODEL="--face_detector_model=${1:22}"
       elif [ "$KEY" == "--disable-share" ]; then
@@ -303,7 +306,8 @@ function build_api() {
   if [ ! -e ../third_party ]; then
     ln -s "$__CURRENT_DIR/third_party" ../third_party
   fi
-  $PYTHON generate_api.py $F_CENTER_FACE $F_DISABLE_SHARE $F_PASSWORD $F_FACE_DETECTOR $F_FACE_DETECTOR_MODEL
+  $PYTHON generate_api.py $F_CENTER_FACE $F_DISABLE_SHARE $F_PASSWORD $F_FACE_DETECTOR $F_FACE_DETECTOR_MODEL \
+          $F_FACE_CLUSTERING
   __assert "API generate failed"
   if [ ! -d ../third_party ]; then
     rm ../third_party

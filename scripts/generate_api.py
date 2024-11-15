@@ -11,11 +11,14 @@ import argparse
 import face_detect
 import cv2
 import time
+import pickle
+import face_clustering
 
 PASSWORD_ENABLED = False
 PASSWORD_IN_MD5 = ''
 CENTER_FACE = False
 ENABLE_SHARED = True
+FACE_CLUSTERING = False
 
 _g_face_detector = None
 
@@ -23,6 +26,14 @@ HASH2ALBUM = {}
 
 ENUM_API_TYPE_NORMAL = "normal"
 ENUM_API_TYPE_ALIAS = "alias"
+
+FACE_CLUSTERING_RESULTS = []
+
+def split_array(arr, N=50):
+    result = []
+    for i in range(0, len(arr), N):
+        result.append(arr[i:i + N])
+    return result
 
 def get_album_path(album_name=''):
     if album_name != '':
@@ -213,6 +224,16 @@ def generate_json_album_related(album_name=''):
                 faces = face_detect.face_detection(detector=_g_face_detector, image_path=img_src)
                 image_meta["faces"] = [ [ int(el) for el in rect[:4] ] for rect in faces ]
                 print("-- Detected faces: ", image_meta["faces"])
+            if FACE_CLUSTERING:
+                print("-- Performing embedding extraction for: ", pf)
+                img_src = '{}{}'.format(get_album_path(album_name), pf)
+                faces = _g_face_detector.get_face_embedding(image_path = img_src)
+                print("-- Detected faces: ", len(faces))
+                if len(faces):
+                    FACE_CLUSTERING_RESULTS.append({
+                        "image": image_meta,
+                        "faces": faces,
+                    })
             image_data.append(image_meta)
     # 生成相片数量
     album_name_hash = create_hash_name_from_album_name(album_name)
@@ -252,10 +273,57 @@ def check_for_password(password):
         write_json_file("password.json", {"enabled": False})
 
 
+# 人物分类API
+##  /api/people/catagories.json  不同的人的数量
+##  /api/people/catagory-{catagory_id}-get-photo-count.json  相片数量
+##  /api/people/catagory-{catagory_id}-get-photo-page-{page}.json  生成缩略图并获取每一页的相片列表
+def generate_people_collection():
+    print("-- Generate people collection APIs")
+    if not os.path.isdir("./{}/people".format(PASSWORD_IN_MD5)):
+        os.mkdir("./{}/people".format(PASSWORD_IN_MD5))
+    print("-- Perform face clustering...")
+    face_embedding_test_data = FACE_CLUSTERING_RESULTS
+    print("-- Clusering: Count of images:", len(face_embedding_test_data))
+    embeds = []
+    embeds2images = []
+    for image_idx, data in enumerate(face_embedding_test_data):
+        if len(data["faces"]):
+            embeds += ([face["embedding"] for face in data["faces"]])
+            embeds2images += ([image_idx]*len(data["faces"]))
+    assert len(embeds) == len(embeds2images)
+    print("-- Count of faces:", len(embeds))
+    embeds = np.array(embeds)
+    print("-- Embedding shape: ", embeds.shape)
+    embeds = embeds / np.linalg.norm(embeds, axis=1)[:, np.newaxis]
+    # clustering
+    labels = face_clustering.clustering(embeds, "dbscan", eps=0.5, min_samples=4)
+    # print("-- Labels:", labels)
+    categories = set(labels)
+    categories = [ c for c in categories if c != -1 ]
+    print("Number of categories:", len(categories))
+    write_json_file("people/catagories.json", {"count": len(categories)})
+    categories2image = {}
+    for label_idx, label in enumerate(labels):
+        if label == -1:
+            continue
+        if label not in categories2image.keys():
+            categories2image[label] = []
+        image_idx = embeds2images[label_idx]
+        categories2image[label].append(face_embedding_test_data[image_idx]["image"])
+    for catagory_id, cata in categories2image.items():
+        print("-- Catagory #{}: {} Images".format(catagory_id, len(cata)))
+        write_json_file(f"people/catagory-{catagory_id}-get-photo-count.json", {"count": len(cata)})
+        cata = split_array(cata)
+        for page, cata_per_page in enumerate(cata):
+            write_json_file(f"people/catagory-{catagory_id}-get-photo-page-{page}.json", cata_per_page)
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Generate JSON APIs")
     parser.add_argument("--center_face", action='count',
                         help="Run face detection to make faces always in center in preview mode")
+    parser.add_argument("--face_clustering", action='count',
+                        help="Run face clustering to generate collections for people")
     parser.add_argument("--disable_share", action='count',
                         help="Disable share album with others")
     parser.add_argument("--password", type=str, default="",
@@ -267,6 +335,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     CENTER_FACE = args.center_face
+    FACE_CLUSTERING = args.face_clustering
     ENABLE_SHARED = not args.disable_share
 
     print("-- Face detection: ", 'ON' if CENTER_FACE else 'OFF')
@@ -281,6 +350,8 @@ if __name__ == '__main__':
         except Exception as ex:
             print("error: invalid face detector: {}, model: {}, err: {}".format(args.face_detector, args.face_detector_model, str(ex)))
             sys.exit(1)
+
+    print("-- Face clustering: ", 'ON' if FACE_CLUSTERING else 'OFF')
 
     # remove previous shared directory
     import shutil
@@ -302,4 +373,12 @@ if __name__ == '__main__':
         with open("hash2album.txt", "w") as h2a_file:
             h2a_file.write("\n".join([ "{}:{}".format(k, v) for k, v in HASH2ALBUM.items() ]))
 
+    if FACE_CLUSTERING:
+        # print("-- Saving face embedding data for further use")
+        # np.save("face_embedding_test_data.npy", FACE_CLUSTERING_RESULTS)
+        generate_people_collection()
+
     print('-- Generate API Finished!')
+
+
+

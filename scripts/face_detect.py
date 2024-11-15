@@ -37,5 +37,4 @@ if __name__ == '__main__':
         print("     Creating with args:", test_case[1])
         detector = create_detector(test_case[0], *test_case[1])
         print("detector", detector)
-
-    test_face_detection(detector=detector)
+        test_face_detection(detector=detector)

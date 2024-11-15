@@ -89,11 +89,12 @@ usage: ./bootstrap.sh [OPTIONS] ...
 Options:
     --prefix=PREFIX        指定生成最终打包的程序文件和API文档的位置
     --album-dir=DIR        指定相册的目录（具体结构见下方说明）
-    --center-face          做人脸检测，以使人脸居中显示在主界面预览中
+    --center-face          做人脸检测，以使人脸居中显示在主界面预览中，见下方详细说明
     --face-detector=DETECTOR_NAME  
-                           指定用于人脸检测的推理前端
+                           指定用于人脸检测的推理前端，见下方详细说明
     --face-detector-model=MODEL_NAME
-                           指定用于人脸检测的模型
+                           指定用于人脸检测的模型，见下方详细说明
+    --face-clustering      生成“人物”功能所需API，见下方详细说明
     --password=PWD         指定相册的密码
     --build-webpage-only   只编译网站项目，不生成API
     --generate-api-only    不编译项目，只重新生成API（适用于更新相册）
@@ -106,7 +107,7 @@ Options:
     --help, -h             显示帮助信息
 ```
 
-**人脸检测说明**
+**人脸居中功能：人脸检测说明**
 
 可用的推理前端包括以下几种，可使用 `--face-detector` 参数传入，可用 `--face-detector-model` 指定要使用的模型。
 
@@ -123,6 +124,20 @@ Options:
                --prefix=/mnt/data/wwwroot \
                --album-dir=~/my_album \
                --face-detector=deepface --face-detector-model=yolov8
+```
+
+**“人物”分类功能说明**
+
+使用人物分类功能（使用`--face-clustering`参数）可以将所有照片中同一个人的照片“尽可能地”提取出来形成一个分类。进行人物分类时仅可使用 deepface 作为推理框架。
+
+```bash
+./bootstrap.sh --generate-api-only \
+               --center-face \
+               --password=1234 \
+               --prefix=/mnt/data/wwwroot \
+               --album-dir=~/my_album \
+               --face-detector=deepface --face-detector-model=yolov8 \
+               --face-clustering 
 ```
 
 ### 方式2、 手动构建
