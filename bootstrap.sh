@@ -63,6 +63,10 @@ Options for Environment
 
 Other Options
     --help, -h             Print this help message and exit
+
+Environment Variables
+    NPM_FLAGS              Append arguments when invoke 'npm install' command.
+
 EOF
 }
 
@@ -248,11 +252,11 @@ function build_website() {
   fi
   if [ "$CONFIG_INSTALL_DEPS" != "" ] || [ ! -d node_modules ]; then
     echo "-- Installing NPM deps ..."
-    cnpm install
+    npm install $NPM_FLAGS
     __assert "install NPM deps failed"
   fi
   echo "-- Building website..."
-  cnpm run build
+  npm run build
   __assert "build NPM website failed"
   echo "-- Build succeed!"
   copy_website_files
@@ -324,7 +328,7 @@ function main() {
 
   echo "-- All finished! "
   echo "To have a quick preview, run"
-  echo "    $ npm install -g http-server"
+  echo "    $ npm install -g http-server $NPM_FLAGS"
   echo "    $ http-server $CONFIG_PREFIX"
 }
 
