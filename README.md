@@ -90,6 +90,10 @@ Options:
     --prefix=PREFIX        指定生成最终打包的程序文件和API文档的位置
     --album-dir=DIR        指定相册的目录（具体结构见下方说明）
     --center-face          做人脸检测，以使人脸居中显示在主界面预览中
+    --face-detector=DETECTOR_NAME  
+                           指定用于人脸检测的推理前端
+    --face-detector-model=MODEL_NAME
+                           指定用于人脸检测的模型
     --password=PWD         指定相册的密码
     --build-webpage-only   只编译网站项目，不生成API
     --generate-api-only    不编译项目，只重新生成API（适用于更新相册）
@@ -102,6 +106,24 @@ Options:
     --help, -h             显示帮助信息
 ```
 
+**人脸检测说明**
+
+可用的推理前端包括以下几种，可使用 `--face-detector` 参数传入，可用 `--face-detector-model` 指定要使用的模型。
+
+* [opencv](https://github.com/opencv/opencv)
+* [deepface](https://github.com/serengil/deepface)：使用 `pip install deepface` 安装，默认使用 `yolov8`后端进行人脸检测。在运行时如提示缺少包可以按照提示安装。
+
+使用deepface后端可以利用CUDA进行人脸识别（更快）。
+
+例如，使用deepface和yolov8进行人脸检测生成API，可执行下面的命令
+```bash 
+./bootstrap.sh --generate-api-only \
+               --center-face \
+               --password=1234 \
+               --prefix=/mnt/data/wwwroot \
+               --album-dir=~/my_album \
+               --face-detector=deepface --face-detector-model=yolov8
+```
 
 ### 方式2、 手动构建
 

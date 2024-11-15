@@ -44,6 +44,12 @@ Options for Generating APIs
     --generate-api-only    Only generate APIs
     --center-face          Perform face detection while generating API, to center the faces in
                            preview mode.
+    --face-detector=DETECTOR_NAME
+                           Specify face detector for inference, for list of face detectors,
+                           see README.md. Default: opencv
+    --face-detector-model=MODEL_NAME
+                           Specify face detector model, for detailed list of accepted values,
+                           see README.md.
     --password=PWD         Password for accessing the album
     --copy-resource        Copy built website resources to PREFIX directory
     --disable-cache        Do not use cache when generating thumbnails
@@ -79,6 +85,11 @@ function parse_args() {
         CONFIG_INSTALL_DEPS=1
       elif [ "$KEY" == "--center-face" ]; then
         F_CENTER_FACE="--center_face"
+      elif [ "$KEY" == "--face-detector" ]; then
+        F_FACE_DETECTOR="--face_detector=${1:16}"
+        CONFIG_FACE_DETECTOR_BACKEND="${1:16}"
+      elif [ "$KEY" == "--face-detector-model" ]; then
+        F_FACE_DETECTOR_MODEL="--face_detector_model=${1:22}"
       elif [ "$KEY" == "--disable-share" ]; then
         F_DISABLE_SHARE="--disable_share"
       elif [ "$KEY" == "--use-symlink" ]; then
@@ -136,6 +147,9 @@ function check_python_dep_installed() {
   check_for_python_deps PIL   Pillow
   check_for_python_deps cv2   OpenCV
   check_for_python_deps numpy NumPy
+  if [[ "$CONFIG_FACE_DETECTOR_BACKEND" == "deepface" ]]; then
+    check_for_python_deps deepface deepface
+  fi
 }
 
 function check_for_env() {
@@ -234,11 +248,11 @@ function build_website() {
   fi
   if [ "$CONFIG_INSTALL_DEPS" != "" ] || [ ! -d node_modules ]; then
     echo "-- Installing NPM deps ..."
-    npm install
+    cnpm install
     __assert "install NPM deps failed"
   fi
   echo "-- Building website..."
-  npm run build
+  cnpm run build
   __assert "build NPM website failed"
   echo "-- Build succeed!"
   copy_website_files
@@ -285,7 +299,7 @@ function build_api() {
   if [ ! -e ../third_party ]; then
     ln -s "$__CURRENT_DIR/third_party" ../third_party
   fi
-  $PYTHON generate_api.py $F_CENTER_FACE $F_DISABLE_SHARE $F_PASSWORD
+  $PYTHON generate_api.py $F_CENTER_FACE $F_DISABLE_SHARE $F_PASSWORD $F_FACE_DETECTOR $F_FACE_DETECTOR_MODEL
   __assert "API generate failed"
   if [ ! -d ../third_party ]; then
     rm ../third_party

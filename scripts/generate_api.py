@@ -1,3 +1,5 @@
+import sys
+
 import numpy as np
 import os
 from PIL import Image
@@ -14,6 +16,8 @@ PASSWORD_ENABLED = False
 PASSWORD_IN_MD5 = ''
 CENTER_FACE = False
 ENABLE_SHARED = True
+
+_g_face_detector = None
 
 HASH2ALBUM = {}
 
@@ -204,9 +208,11 @@ def generate_json_album_related(album_name=''):
                 "ct": ctime
             }
             if CENTER_FACE:
-                img_src = cv2.imread('{}{}'.format(get_album_path(album_name), pf))
-                faces = face_detect.face_detection(img_src)
+                img_src = '{}{}'.format(get_album_path(album_name), pf)
+                print("-- Perform face detection for: ", img_src)
+                faces = face_detect.face_detection(detector=_g_face_detector, image_path=img_src)
                 image_meta["faces"] = [ [ int(el) for el in rect[:4] ] for rect in faces ]
+                print("-- Detected faces: ", image_meta["faces"])
             image_data.append(image_meta)
     # 生成相片数量
     album_name_hash = create_hash_name_from_album_name(album_name)
@@ -254,6 +260,10 @@ if __name__ == '__main__':
                         help="Disable share album with others")
     parser.add_argument("--password", type=str, default="",
                         help="Specify a password for API")
+    parser.add_argument("--face_detector", type=str, default="opencv",
+                        help="Specify face detector engine")
+    parser.add_argument("--face_detector_model", type=str, default="",
+                        help="Specify face detector model")
     args = parser.parse_args()
 
     CENTER_FACE = args.center_face
@@ -262,6 +272,15 @@ if __name__ == '__main__':
     print("-- Face detection: ", 'ON' if CENTER_FACE else 'OFF')
     print('-- Password for API: ', 'ON' if args.password != "" else 'OFF')
     print('-- Share enabled: ', ENABLE_SHARED)
+
+    if CENTER_FACE:
+        print("-- Face detector: ", args.face_detector)
+        print("-- Face detector model: ", "<Use default>" if args.face_detector_model == "" else args.face_detector_model)
+        try:
+            _g_face_detector = face_detect.create_detector(args.face_detector, args.face_detector_model)
+        except Exception as ex:
+            print("error: invalid face detector: {}, model: {}, err: {}".format(args.face_detector, args.face_detector_model, str(ex)))
+            sys.exit(1)
 
     # remove previous shared directory
     import shutil
