@@ -56,13 +56,24 @@ def create_cache_dir(album_name=''):
         return
     os.mkdir(get_album_thumbnail_path(album_name))
 
+# see: https://stackoverflow.com/questions/50916422/python-typeerror-object-of-type-int64-is-not-json-serializable
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super(NpEncoder, self).default(obj)
+
 def write_json_file(path, obj):
     global PASSWORD_ENABLED, PASSWORD_IN_MD5
     if PASSWORD_ENABLED:
         path = "{}/{}".format(PASSWORD_IN_MD5, path)
     print('-- Generating album API: {}'.format(path))
     with open(path, 'w', encoding='utf8') as file:
-        file.write(json.dumps(obj))
+        file.write(json.dumps(obj, cls=NpEncoder))
 
 def write_shared_json_file(path, obj):
     if not ENABLE_SHARED:
@@ -73,7 +84,7 @@ def write_shared_json_file(path, obj):
         os.mkdir(shared_base_dir)
     print('-- Generating shared album API: {}'.format(shared_filename))
     with open(shared_filename, 'w') as fp:
-        fp.write(json.dumps(obj))
+        fp.write(json.dumps(obj, cls=NpEncoder))
 
 
 def read_file(path):
@@ -260,23 +271,28 @@ def MD5(str):
 
 def check_for_password(password):
     global PASSWORD_ENABLED, PASSWORD_IN_MD5
+
+    write_json_file("password.json",
+                    {
+                        "enabled": password != "",
+                        "share_enabled": ENABLE_SHARED,
+                        "people_enabled": FACE_CLUSTERING
+                    })
+
     if password != "":
         print('-- Password is enabled')
-        write_json_file("password.json", {"enabled": True, "share_enabled": ENABLE_SHARED})
         PASSWORD_ENABLED = True
         PASSWORD_IN_MD5 = MD5(password)
         print('-- Password hash value is {}'.format(PASSWORD_IN_MD5))
         # 创建具有密码的目录
         if not os.path.isdir("./{}".format(PASSWORD_IN_MD5)):
             os.mkdir("./{}".format(PASSWORD_IN_MD5))
-    else:
-        write_json_file("password.json", {"enabled": False})
 
 
 # 人物分类API
-##  /api/people/catagories.json  不同的人的数量
-##  /api/people/catagory-{catagory_id}-get-photo-count.json  相片数量
-##  /api/people/catagory-{catagory_id}-get-photo-page-{page}.json  生成缩略图并获取每一页的相片列表
+##  /api/people/categories.json  不同的人的数量
+##  /api/people/category-{catagory_id}-get-photo-count.json  相片数量
+##  /api/people/category-{catagory_id}-get-photo-page-{page}.json  生成缩略图并获取每一页的相片列表
 def generate_people_collection():
     print("-- Generate people collection APIs")
     if not os.path.isdir("./{}/people".format(PASSWORD_IN_MD5)):
@@ -300,8 +316,7 @@ def generate_people_collection():
     # print("-- Labels:", labels)
     categories = set(labels)
     categories = [ c for c in categories if c != -1 ]
-    print("Number of categories:", len(categories))
-    write_json_file("people/catagories.json", {"count": len(categories)})
+    print("-- Number of categories (People):", len(categories))
     categories2image = {}
     for label_idx, label in enumerate(labels):
         if label == -1:
@@ -310,12 +325,21 @@ def generate_people_collection():
             categories2image[label] = []
         image_idx = embeds2images[label_idx]
         categories2image[label].append(face_embedding_test_data[image_idx]["image"])
+
+    write_json_file("people/categories.json",
+                    {
+                        "count": len(categories),
+                        "categories": [
+                            { "id": catagory_id, "preview": cata[0] if len(cata) else None }
+                            for catagory_id, cata in categories2image.items()
+                        ]
+                    })
     for catagory_id, cata in categories2image.items():
         print("-- Catagory #{}: {} Images".format(catagory_id, len(cata)))
-        write_json_file(f"people/catagory-{catagory_id}-get-photo-count.json", {"count": len(cata)})
+        write_json_file(f"people/category-{catagory_id}-get-photo-count.json", {"count": len(cata)})
         cata = split_array(cata)
         for page, cata_per_page in enumerate(cata):
-            write_json_file(f"people/catagory-{catagory_id}-get-photo-page-{page}.json", cata_per_page)
+            write_json_file(f"people/category-{catagory_id}-get-photo-page-{page}.json", cata_per_page)
 
 
 if __name__ == '__main__':
@@ -335,7 +359,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     CENTER_FACE = args.center_face
-    FACE_CLUSTERING = args.face_clustering
+    FACE_CLUSTERING = not not args.face_clustering
     ENABLE_SHARED = not args.disable_share
 
     print("-- Face detection: ", 'ON' if CENTER_FACE else 'OFF')
