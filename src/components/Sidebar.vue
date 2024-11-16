@@ -40,6 +40,20 @@
 
       </a>
     </div>
+
+    <div class="title2" v-if="people_enabled">
+      人物
+    </div>
+    <div class="people-list" v-if="people_enabled">
+      <div :class="[ 'people', get_css_class_list_item('/people/category-' + cata.id) ]" :key="cata.id"
+           :style="{
+              backgroundImage: 'url(\'/api/album-cache/' + cata.preview.al + '/' + cata.preview.name + '\')',
+              backgroundPosition: calcCenterFaceBgpos(cata.preview)
+           }"
+           @click="on_switch_album('/people/category-' + cata.id, `人物${cata.id + 1}`)"
+           v-for="cata in people_categories">
+      </div>
+    </div>
   </div>
 </template>
 
@@ -56,12 +70,14 @@ import IconExit from "@/icons/IconExit";
 export default {
   name: "Sidebar",
   components: {IconSideBar, IconBase, IconExit},
+  props: [ "people_enabled" ],
   data: () => ({
     album_list: [],
     selected_album_name: '/all',
     show_banner: true,
 
     shouldShowSemiTransparentNavBar: false,
+    people_categories: [],
   }),
   methods: {
     raise_event_show_sidebar(val, mode) {
@@ -89,6 +105,11 @@ export default {
     },
     async getAlbumList() {
       this.album_list = await utils.get_secured_json('get-album')
+
+      if (this.people_enabled) {
+        const people_categories = await utils.get_secured_json("people/categories");
+        this.people_categories = people_categories.categories;
+      }
     },
     async getAlbumListForShare(album_hash) {
       window.share_album_hash = album_hash;
@@ -100,6 +121,9 @@ export default {
     logout() {
       localStorage.removeItem('password');
       location.reload();
+    },
+    calcCenterFaceBgpos(photo) {
+      return utils.calc_center_face_bg_pos(photo);
     }
   }
 }

@@ -9,7 +9,7 @@
     </div>
     <div class="sidebar-mobile-mask" v-show="sidebar_shown_on_mobile_mode" @click="sidebar_shown_on_mobile_mode = false"></div>
     <div :class="['sidebar-container', sidebar_shown_on_pc_mode?'':'side-hidden-screen', sidebar_shown_on_mobile_mode?'sidebar-mobile-shown':'']">
-      <Sidebar ref="sidebar"
+      <Sidebar ref="sidebar" :people_enabled="people_enabled"
                @switch-album="(album_name, friendly_name) => { this.contentAlbumName = album_name; this.contentFriendlyName = friendly_name; }"
                @should-show-sidebar="(val, mode) =>  mode === 'mobile' ? sidebar_shown_on_mobile_mode = val : sidebar_shown_on_pc_mode = val"
       ></Sidebar>
@@ -56,6 +56,9 @@ export default {
 
     contentAlbumName: "",
     contentFriendlyName: "",
+
+    // People feature in Sidebar
+    people_enabled: false,
   }),
   methods: {
     previewPhoto(filename, photo_list, index, album_name, photo_obj) {
@@ -122,7 +125,7 @@ export default {
 
       this.contentAlbumName = "/share";
       this.contentFriendlyName = "共享的相册";
-    }
+    },
   },
   async mounted() {
     if (window.innerWidth <= 500)
@@ -155,8 +158,9 @@ export default {
     }
 
     if (!window.is_share_link) {
-      password_enabled = await utils.get_json('password');
-      password_enabled = password_enabled.enabled;
+      const app_config = await utils.get_json('password');
+      password_enabled = app_config.enabled;
+      this.people_enabled = app_config.people_enabled;
     }
 
     let __TRUE__ = true;

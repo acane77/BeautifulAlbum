@@ -105,6 +105,47 @@ function GetFileContent(ext='.txt') {
     });
 }
 
+function CalculateCenterFaceBackgroundPosition(photo) {
+    // 如果没有开启人脸居中功能，即没有在生成API的时候做人脸检测，直接返回默认值
+    if (typeof photo.faces == "undefined") {
+        return '0px 0px';
+    }
+    let faces = photo.faces;
+    // 如果没有检测到人脸
+    if (faces.length == 0)
+        return '0px 0px';
+
+    // 根据所有的人脸框，求出人脸框平均值最大的位置
+    let avg_x = faces.map(e => e[0]).reduce((a, b)=>a+b, 0) / faces.length;
+    let avg_y = faces.map(e => e[1]).reduce((a, b)=>a+b, 0) / faces.length;
+    let avg_w = faces.map(e => e[2]).reduce((a, b)=>a+b, 0) / faces.length;
+    let avg_h = faces.map(e => e[3]).reduce((a, b)=>a+b, 0) / faces.length;
+
+    // 图片平均中心点的位置
+    let center_x = avg_x + avg_w / 2;
+    let center_y = avg_y + avg_h / 2;
+
+    let image_w = photo.w;
+    let image_h = photo.h;
+
+    // 根据图片的宽高比居中人脸
+    let wh_ratio = photo.w / photo.h;
+    if (wh_ratio > 1.0) {
+        // 如果图片是横图
+        let hw_ratio = photo.h / photo.w;
+        let w_ratio = center_x / image_w;
+        let ratio = Math.max(0, w_ratio - hw_ratio / 2);
+        return `${ ratio * 100 }% 0%`
+    }
+    else {
+        // 如果图片是竖图
+        let h_ratio = center_y / image_h;
+        let ratio = h_ratio; Math.max(0, h_ratio - wh_ratio / 2)
+        return `0% ${ ratio * 100 }%`;
+    }
+    // return '1px 1px';
+}
+
 export default {
     get_secured_json: get_secured_json,
     get_json: get_json,
@@ -112,4 +153,5 @@ export default {
     download_text_as_file: DownloadTextAsFile,
     get_current_time_f: GetCurrentTimeFormatted,
     get_file_content: GetFileContent,
+    calc_center_face_bg_pos: CalculateCenterFaceBackgroundPosition,
 }

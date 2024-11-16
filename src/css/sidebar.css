@@ -15,3 +15,30 @@
     border-radius: 3px;
     background-size: cover;
 }
+
+/* People display */
+.sidebar-container div.people-list {
+    width: 100%;
+    padding-left: 5%;
+}
+
+.sidebar-container div.people-list div.people {
+    display: inline-block;
+    width: 25%;
+    padding-top: 25%;
+    background-size: cover;
+    margin-right: 5%;
+    position: relative;
+    border-radius: 50%;
+    border: 3px solid transparent;
+}
+
+.sidebar-container div.people-list div.people.selected {
+    border: 3px solid #5555ff;
+}
+
+@media screen and (max-width: 500px) {
+    .sidebar-container div.people-list div.people.selected {
+        border: 3px solid transparent;
+    }
+}
