@@ -130,8 +130,20 @@ function check_npm_installed() {
   fi
   echo "-- Checking for NPM..."
   which npm 1>/dev/null 2>&1
-  __assert "npm is not install. Please install NodeJS first"
+  __assert "npm is not install. Please install NPM first"
   echo "-- Found NPM version: $(npm --version)"
+
+  echo "-- Checking for Node..."
+  which node 1>/dev/null 2>&1
+  __assert "node is not install. Please install Node first (should <= 17, install using nvm is recommended)"
+  echo "-- Found Node version: $(node --version)"
+  NODE_MAJOR_VERSION="$(node --version|cut -f 1 -d .|grep -oE '[0-9]+')"
+  MAX_SUPPORTED_NPM_MAJOR_VERSION=16
+  if [ "$NODE_MAJOR_VERSION" -gt $MAX_SUPPORTED_NPM_MAJOR_VERSION ] && [ "$BYPASS_NPM_VERSION_CHECK" != "1" ]; then
+    __exit "You are using node v$NODE_MAJOR_VERSION, which is greater than v$MAX_SUPPORTED_NPM_MAJOR_VERSION, is not supported by this project and may cause errors."\
+           "Export environment variable BYPASS_NPM_VERSION_CHECK=1 to suppress this error." \
+           "(By the way, I also wonder why, maybe I can't catch up with the nowadays nodeJS community)"
+  fi
 }
 
 function check_for_python_deps() {

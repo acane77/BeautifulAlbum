@@ -21,7 +21,9 @@
 
 ### 方式1、 使用bootstrap.sh脚本自动化构建
 
-* **注意**：Windows用户需要使用msys2，git-bash或者WSL运行这个脚本。
+**注意**：
+* Windows用户需要使用msys2，git-bash或者WSL运行这个脚本。
+* NodeJS版本建议使用node 16版本。
 
 **Step 1. 组织相册**
 
