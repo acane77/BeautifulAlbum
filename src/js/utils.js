@@ -135,12 +135,13 @@ function CalculateCenterFaceBackgroundPosition(photo) {
         let hw_ratio = photo.h / photo.w;
         let w_ratio = center_x / image_w;
         let ratio = Math.max(0, w_ratio - hw_ratio / 2);
+        ratio *= 0.7;
         return `${ ratio * 100 }% 0%`
     }
     else {
         // 如果图片是竖图
         let h_ratio = center_y / image_h;
-        let ratio = h_ratio; Math.max(0, h_ratio - wh_ratio / 2)
+        let ratio = h_ratio * 0.7; Math.max(0, h_ratio - wh_ratio / 2)
         return `0% ${ ratio * 100 }%`;
     }
     // return '1px 1px';

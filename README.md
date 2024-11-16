@@ -105,6 +105,7 @@ Options:
     --disable-share        禁用“分享”功能，不生成相关的API
     --use-symlink          生成用于“分享”功能的API时，使用符号链接而不是拷贝文件
     --help, -h             显示帮助信息
+    --                     -- 后面所有的参数将被传递给'scripts/generate_api.py'
 ```
 
 **人脸居中功能：人脸检测说明**
@@ -138,6 +139,19 @@ Options:
                --album-dir=~/my_album \
                --face-detector=deepface --face-detector-model=yolov8 \
                --face-clustering 
+```
+
+指定自定义的聚类参数
+
+```bash
+./bootstrap.sh --generate-api-only \
+               --center-face \
+               --password=1234 \
+               --prefix=/mnt/data/wwwroot \
+               --album-dir=~/my_album \
+               --face-detector=deepface --face-detector-model=yolov8 \
+               --face-clustering \
+               -- --face_clustering_eps=0.7 --face_clustering_min_samples=4
 ```
 
 ### 方式2、 手动构建

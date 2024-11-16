@@ -28,6 +28,11 @@ ENUM_API_TYPE_NORMAL = "normal"
 ENUM_API_TYPE_ALIAS = "alias"
 
 FACE_CLUSTERING_RESULTS = []
+FACE_CLUSTERING_RESULTS_KEYS = []
+FACE_EMBEDDINGS_NPY="face_embedding.npy"
+
+def get_clustering_result_key(meta):
+    return f"{meta['al']}/{meta['name']}"
 
 def split_array(arr, N=50):
     result = []
@@ -235,7 +240,7 @@ def generate_json_album_related(album_name=''):
                 faces = face_detect.face_detection(detector=_g_face_detector, image_path=img_src)
                 image_meta["faces"] = [ [ int(el) for el in rect[:4] ] for rect in faces ]
                 print("-- Detected faces: ", image_meta["faces"])
-            if FACE_CLUSTERING:
+            if FACE_CLUSTERING and not get_clustering_result_key(image_meta) in FACE_CLUSTERING_RESULTS_KEYS:
                 print("-- Performing embedding extraction for: ", pf)
                 img_src = '{}{}'.format(get_album_path(album_name), pf)
                 faces = _g_face_detector.get_face_embedding(image_path = img_src)
@@ -293,7 +298,7 @@ def check_for_password(password):
 ##  /api/people/categories.json  不同的人的数量
 ##  /api/people/category-{catagory_id}-get-photo-count.json  相片数量
 ##  /api/people/category-{catagory_id}-get-photo-page-{page}.json  生成缩略图并获取每一页的相片列表
-def generate_people_collection():
+def generate_people_collection(**kwargs):
     print("-- Generate people collection APIs")
     if not os.path.isdir("./{}/people".format(PASSWORD_IN_MD5)):
         os.mkdir("./{}/people".format(PASSWORD_IN_MD5))
@@ -312,7 +317,7 @@ def generate_people_collection():
     print("-- Embedding shape: ", embeds.shape)
     embeds = embeds / np.linalg.norm(embeds, axis=1)[:, np.newaxis]
     # clustering
-    labels = face_clustering.clustering(embeds, "dbscan", eps=0.5, min_samples=4)
+    labels = face_clustering.clustering(embeds, "dbscan", **kwargs)
     # print("-- Labels:", labels)
     categories = set(labels)
     categories = [ c for c in categories if c != -1 ]
@@ -356,6 +361,10 @@ if __name__ == '__main__':
                         help="Specify face detector engine")
     parser.add_argument("--face_detector_model", type=str, default="",
                         help="Specify face detector model")
+    parser.add_argument("--face_clustering_eps", type=float, default=0.5,
+                        help="Specify DBSCAN face clustering eps, low value for more strict similarity")
+    parser.add_argument("--face_clustering_min_samples", type=int, default=4,
+                        help="Specify DBSCAN face clustering min_samples, for minimum images count to create a new category.")
     args = parser.parse_args()
 
     CENTER_FACE = args.center_face
@@ -365,6 +374,13 @@ if __name__ == '__main__':
     print("-- Face detection: ", 'ON' if CENTER_FACE else 'OFF')
     print('-- Password for API: ', 'ON' if args.password != "" else 'OFF')
     print('-- Share enabled: ', ENABLE_SHARED)
+
+    if FACE_CLUSTERING:
+        if os.path.exists(FACE_EMBEDDINGS_NPY):
+            with open(FACE_EMBEDDINGS_NPY, "rb") as fp:
+                FACE_CLUSTERING_RESULTS = pickle.load(fp)
+            FACE_CLUSTERING_RESULTS_KEYS = [ get_clustering_result_key(x["image"]) for x in FACE_CLUSTERING_RESULTS ]
+            print("-- Loaded {} face embeddings, use --force_update to force re-embedding".format(len(FACE_CLUSTERING_RESULTS)))
 
     if CENTER_FACE:
         print("-- Face detector: ", args.face_detector)
@@ -398,9 +414,12 @@ if __name__ == '__main__':
             h2a_file.write("\n".join([ "{}:{}".format(k, v) for k, v in HASH2ALBUM.items() ]))
 
     if FACE_CLUSTERING:
-        # print("-- Saving face embedding data for further use")
-        # np.save("face_embedding_test_data.npy", FACE_CLUSTERING_RESULTS)
-        generate_people_collection()
+        print("-- Face clustering parameters: eps={}, min_samples={}".format(args.face_clustering_eps, args.face_clustering_min_samples))
+        print("-- Saving face embedding data for further use")
+        with open(FACE_EMBEDDINGS_NPY, "wb") as fp:
+            pickle.dump(FACE_CLUSTERING_RESULTS, fp)
+        generate_people_collection(eps=args.face_clustering_eps,
+                                   min_samples=args.face_clustering_min_samples)
 
     print('-- Generate API Finished!')
 

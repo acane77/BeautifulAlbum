@@ -63,7 +63,9 @@ Options for Environment
     --install-deps         Install npm deps
 
 Other Options
+    --                     All command line arguments after '--' will passed to generate_api.py.
     --help, -h             Print this help message and exit
+
 
 Environment Variables
     NPM_FLAGS              Append arguments when invoke 'npm install' command.
@@ -110,6 +112,11 @@ function parse_args() {
       elif [ "$KEY" == "--help" ] || [ "$KEY" == "-h" ]; then
         print_help
         exit 0
+      elif [ "$1" == "--" ]; then
+        shift
+        F_REMAINING_ARGS="$@"
+        echo "-- Arguments passed to generate_api.py: $F_REMAINING_ARGS"
+        break
       else
         __exit "invalid argument: $KEY, type '$__PROG -h' for help"
       fi
@@ -307,7 +314,7 @@ function build_api() {
     ln -s "$__CURRENT_DIR/third_party" ../third_party
   fi
   $PYTHON generate_api.py $F_CENTER_FACE $F_DISABLE_SHARE $F_PASSWORD $F_FACE_DETECTOR $F_FACE_DETECTOR_MODEL \
-          $F_FACE_CLUSTERING
+          $F_FACE_CLUSTERING $F_REMAINING_ARGS
   __assert "API generate failed"
   if [ ! -d ../third_party ]; then
     rm ../third_party
