@@ -3,14 +3,14 @@
     <div style="position: relative; height: 100%; width: 100%; margin: 0 0">
       <div class="dialog" v-show="true || password_dialog_shown">
         <div class="title">
-          相册
+          {{ tr("pwdi.title") }}
         </div>
         <div class="ctnt">
-          <p v-if="!passwordErrorMsgShown">请输入密码以访问相册。</p>
-          <p v-else style="color: red">密码错误，请重新输入！</p>
-          <input ref="pi" type="password" placeholder="密码" v-model="passwordEntered" @keyup.enter="submitPassword()"/>
+          <p v-if="!passwordErrorMsgShown">{{ tr("pwdi.hint") }}</p>
+          <p v-else style="color: red">{{ tr("pwdi.retry") }}</p>
+          <input ref="pi" type="password" :placeholder="tr('Password')" v-model="passwordEntered" @keyup.enter="submitPassword()"/>
           <div style="padding-top: 25px; text-align: center">
-            <button class="primary" style="width: 100px;" @click="submitPassword()" :disabled="!password_dialog_shown">确定</button>
+            <button class="primary" style="width: 100px;" @click="submitPassword()" :disabled="!password_dialog_shown">{{ tr("OK") }}</button>
           </div>
         </div>
       </div>
@@ -33,6 +33,7 @@ export default {
     showInput: true,
   }),
   methods: {
+    tr(x, ...args) { return utils.translate(x, ...args) },
     async submitPassword() {
       if (!this.password_dialog_shown) return;
       console.log('submit password: ', md5(this.passwordEntered));

@@ -1,6 +1,6 @@
 <template>
   <div :class="showNavBar ? 'preview-with-navbar' : 'preview-hidden-navbar'" style="width: 100%; height: 100%;">
-    <span style="position: absolute; top: 45%; text-align: center; color: #888; display: block; width: 100%;">正在加载图片...</span>
+    <span style="position: absolute; top: 45%; text-align: center; color: #888; display: block; width: 100%;">{{ tr("preview.loading") }}</span>
     <div class="preview-photo-base preview-bg" :style="preview_cache_img_style"></div>
     <div class="preview-photo-high-res preview-bg" :style="preview_img_style"></div>
     <div class="preview-mask" @click="() => { showNavBar = !showNavBar }"></div>
@@ -9,11 +9,11 @@
         {{ photo_name }}
       </div>
       <div class="left-button-group" @click="raise_hide_preview()">
-        <i class="larrow"></i><span class="backtext">{{ catalog_name === '' ? '相册列表':catalog_name }}</span>
+        <i class="larrow"></i><span class="backtext">{{ catalog_name === '' ? tr("Album"):catalog_name }}</span>
       </div>
 
       <div class="right-button-group">
-        <a href="javascript:void(0)" @click="downloadPhoto()">下载</a>
+        <a href="javascript:void(0)" @click="downloadPhoto()">{{ tr("preview.download_btn") }}</a>
       </div>
 
 
@@ -24,6 +24,7 @@
 <script>
 import '../css/style.css';
 import '../css/preview.css';
+import utils from "@/js/utils";
 
 export default {
   name: "Preview",
@@ -45,6 +46,7 @@ export default {
     },
   },
   methods: {
+    tr(x, ...args) { return utils.translate(x, ...args) },
     raise_hide_preview() {
       this.$emit('hide-preview');
     },

@@ -9,7 +9,7 @@
           <slot></slot>
         </div>
         <div class="cbgroup" style="padding-top: 3px; text-align: right; padding-right: 10px">
-          <button class="complete" @click="completeClick()" :disabled="!password_dialog_shown">完成</button>
+          <button class="complete" @click="completeClick()" :disabled="!password_dialog_shown">{{ tr("popup.complete_btn") }}</button>
         </div>
       </div>
     </div>
@@ -28,6 +28,7 @@ export default {
     password_dialog_shown: true,
   }),
   methods: {
+    tr(x, ...args) { return utils.translate(x, ...args) },
     async completeClick() {
       this.$emit('complete-click');
     },

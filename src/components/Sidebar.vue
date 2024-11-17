@@ -2,7 +2,7 @@
   <div style="padding-left: 10px; padding-right: 10px; height: 100%; overflow-y: auto" @scroll="handleScroll">
     <div :class="['navbar', shouldShowSemiTransparentNavBar ? '' : 'large']">
       <div class="nav-title">
-        照片
+        {{ tr("Photos") }}
       </div>
       <div class="left-button-group">
         <a class="hidden-btn" href="javascript:void(0)"
@@ -19,17 +19,27 @@
     </div>
 
     <div class="title1 navtitle" :style="{ marginTop: '50px', opacity: 1-shouldShowSemiTransparentNavBar }">
-      照片
+      {{ tr("Photos") }}
     </div>
 
     <div class="listview normal-menu-ui" style="margin-top: 5px;">
-      <a v-show="show_banner"  :class="get_css_class_list_item('/all')" @click="on_switch_album('/all', '图库')" href="javascript:void(0)"><span>图库</span></a>
-      <a v-show="show_banner"  :class="get_css_class_list_item('/recent')" @click="on_switch_album('/recent', '最近项目')" href="javascript:void(0)"><span>最近项目</span></a>
-      <a :class="get_css_class_list_item('/fav')" @click="on_switch_album('/fav', '个人收藏')" href="javascript:void(0)"><span>个人收藏</span></a>
+      <a v-show="show_banner"  :class="get_css_class_list_item('/all')"
+         @click="on_switch_album('/all', tr('sidebar.photo_library'))"
+         href="javascript:void(0)">
+        <span> {{ tr("sidebar.photo_library") }} </span>
+      </a>
+      <a v-show="show_banner" :class="get_css_class_list_item('/recent')"
+         @click="on_switch_album('/recent', tr('sidebar.recent'))"
+         href="javascript:void(0)"><span>{{ tr('sidebar.recent') }}</span>
+      </a>
+      <a :class="get_css_class_list_item('/fav')"
+         @click="on_switch_album('/fav', tr('sidebar.favorites'))"
+         href="javascript:void(0)"><span>{{ tr('sidebar.favorites') }}</span>
+      </a>
     </div>
 
     <div class="title2">
-      我的相簿
+      {{ tr("My Albums") }}
     </div>
     <div class="listview">
       <a :class="[ 'album-prev', get_css_class_list_item(album.name) ]" @click="on_switch_album(album.name, album.friendly_name)"  href="javascript:void(0)" v-for="album in album_list" :key="album.name">
@@ -41,16 +51,16 @@
       </a>
     </div>
 
-    <div class="title2" v-if="people_enabled">
-      人物
+    <div class="title2" v-show="people_enabled && people_categories.length > 0">
+      {{ tr("People") }}
     </div>
-    <div class="people-list" v-if="people_enabled">
+    <div class="people-list" v-show="people_enabled && people_categories.length > 0">
       <div :class="[ 'people', get_css_class_list_item('/people/category-' + cata.id) ]" :key="cata.id"
            :style="{
               backgroundImage: 'url(\'/api/album-cache/' + cata.preview.al + '/' + cata.preview.name + '\')',
               backgroundPosition: calcCenterFaceBgpos(cata.preview)
            }"
-           @click="on_switch_album('/people/category-' + cata.id, `人物${cata.id + 1}`)"
+           @click="on_switch_album('/people/category-' + cata.id, tr('sidebar.people.title', cata.id + 1))"
            v-for="cata in people_categories">
       </div>
     </div>
@@ -80,6 +90,7 @@ export default {
     people_categories: [],
   }),
   methods: {
+    tr(x, ...args) { return utils.translate(x, ...args) },
     raise_event_show_sidebar(val, mode) {
       this.$emit('should-show-sidebar', val, mode);
     },

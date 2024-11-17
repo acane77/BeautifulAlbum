@@ -5,34 +5,34 @@
         <span class="title-text">{{ album_friendly_name }}</span>
       </div>
       <div class="title right">
-        <span style="color: #eee; margin-right: 10px;">{{ photo_count }}张图片</span>
+        <span style="color: #eee; margin-right: 10px;">{{ tr("content.photo_count", photo_count) }}</span>
         <button @click="menu_more_is_shown = !menu_more_is_shown" style="">...</button>
         <!-- 弹出的菜单 -->
         <div class="context-menu-mask" v-show="menu_more_is_shown" @click="menu_more_is_shown = false"></div>
         <div :class="['context-menu', menu_more_is_shown?'shown':'hidden']" v-show="menu_more_is_shown" style="top: 56px; right: 20px">
           <a href="javascript:void(0)"
              @click="current_zoom_scale < 2 && ((current_zoom_scale++), (menu_more_is_shown = false))"
-             :aria-disabled="current_zoom_scale >= 2">放大</a>
+             :aria-disabled="current_zoom_scale >= 2">{{ tr("content.ctx_menu.zoom_in") }}</a>
           <a href="javascript:void(0)"
              @click="current_zoom_scale > -6 && ((current_zoom_scale--), (menu_more_is_shown = false))"
-             :aria-disabled="current_zoom_scale <= -6">缩小</a>
+             :aria-disabled="current_zoom_scale <= -6">{{ tr("content.ctx_menu.zoom_out") }}</a>
           <a href="javascript:void(0)"
              @click="current_zoom_scale != 0 && ((current_zoom_scale = 0), (menu_more_is_shown = false))"
-             :aria-disabled="current_zoom_scale == 0">默认缩放 (当前：{{ current_zoom_scale }})</a>
+             :aria-disabled="current_zoom_scale == 0">{{ tr("content.ctx_menu.default_scale", current_zoom_scale) }}</a>
           <hr v-show="base_name[0] !== '/'" />
           <a href="javascript:void(0)" v-show="base_name[0] !== '/'"
              @click="shareAlbumClick()"
-             :aria-disabled="!share_enabled">分享...</a>
+             :aria-disabled="!share_enabled">{{ tr("content.ctx_menu.share") }}</a>
           <hr v-show="base_name === '/fav'" />
           <a href="javascript:void(0)" v-show="base_name === '/fav'"
-            @click="exportFavClick()">导出个人收藏</a>
+            @click="exportFavClick()">{{ tr("content.ctx_menu.export_fav") }}</a>
           <a href="javascript:void(0)" v-show="base_name === '/fav'"
-            @click="importFavClick()">导入个人收藏</a>
+            @click="importFavClick()">{{ tr("content.ctx_menu.import_fav") }}</a>
         </div>
 
       </div>
       <div class="back left"   style="line-height:45px; left: 18px; top: 0" @click="raise_event_show_sidebar(true, 'mobile')">
-        <i class="larrow" style="border-color: white"></i><span class="backtext">照片</span>
+        <i class="larrow" style="border-color: white"></i><span class="backtext">{{ tr("Photos") }}</span>
       </div>
 
       <div :class="['back', 'left', 'sidebar-hidden-left', sidebar_shown_pc?'':'sidebar-hidden']"
@@ -67,15 +67,16 @@
 
     <div class="dialog-container" v-show="popup_dialog_shown">
       <PopupDialog ref="popup_dialog"
-                   title="分享相册"
+                   :title="tr('content.share_dialog.title')"
                    @complete-click="() => { popup_dialog_shown = false; }"
       >
         <div v-show="share_dialog_phase === 1 && share_enabled">
-          <!-- (1) 设置分享密码 -->
+          <!-- (1) Set password for sharing -->
           <p>
-            共享相册：<span style="font-weight: bold">{{ album_friendly_name }}</span>
+            {{ tr("content.share_dialog.sharing") }}
+            <span style="font-weight: bold">{{ album_friendly_name }}</span>
           </p>
-          <p>设置分享密码：</p>
+          <p>{{ tr("content.share_dialog.set_password_label") }}</p>
           <p>
             <input type="password"
                    v-model="share_password"
@@ -84,23 +85,18 @@
           </p>
           <span class="mbutton-group" style="text-align: center; display: block">
             <button class="primary large_button primary_btn"
-                    @click="shareButtonClick()" >分享</button>
+                    @click="shareButtonClick()" >{{ tr("content.share_dialog.share_btn") }}</button>
           </span>
         </div>
         <div v-show="share_dialog_phase === 2 && share_enabled">
-          <!-- (2) 分享结果 -->
-          <p>分享链接为：</p>
+          <!-- (2) Show results of sharing -->
+          <p>{{ tr("content.share_dialog.share_link_is") }}</p>
           <pre class="share_url">{{ share_url }}</pre>
-          <p>
-            将这个链接发送给其他人即可分享该相册，无需将相册的访问密码提供给对方。
-            获得该分享链接的人需要输入分享密码方可查看。
-          </p>
-          <p>
-            如果想要取消对方的访问权限，请使用项目提供的工具重新生成分享API。
-          </p>
+          <p>{{ tr("content.share_dialog.share_link_desc_1") }}</p>
+          <p>{{ tr("content.share_dialog.share_link_desc_2") }}</p>
         </div>
         <div v-show="!share_enabled">
-          <p>不能分享该相册。</p>
+          <p>{{ tr("content.share_dialog.unsharable") }}</p>
         </div>
       </PopupDialog>
     </div>
@@ -179,6 +175,7 @@ export default {
     this.initialize();
   },
   methods: {
+    tr(x, ...args) { return utils.translate(x, ...args) },
     raise_event_show_sidebar(val, mode) {
       this.$emit('should-show-sidebar', val, mode);
     },
@@ -356,7 +353,7 @@ export default {
       }
       let localstorage = window.localStorage;
       if (typeof localstorage === "undefined") {
-        alert('你的浏览器不支持Local Storage，无法使用此功能。');
+        alert(this.tr("content.fav.unsupported"));
         return;
       }
       // Save as <key, value> to local storage
@@ -377,7 +374,7 @@ export default {
       }
       this.share_dialog_phase = 1;
       this.popup_dialog_shown = true;
-      this.$refs.password_input.focus();
+      //this.$refs.password_input.focus();
       this.menu_more_is_shown = false;
     },
     shareButtonClick() {
@@ -450,7 +447,7 @@ export default {
       }
       catch (ee) {
         console.log(ee);
-        alert("选择的文件无法识别！");
+        alert(this.tr("content.fav.unrecognized"));
       }
 
     }

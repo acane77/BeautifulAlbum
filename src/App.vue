@@ -61,6 +61,7 @@ export default {
     people_enabled: false,
   }),
   methods: {
+    tr(x, ...args) { return utils.translate(x, ...args) },
     previewPhoto(filename, photo_list, index, album_name, photo_obj) {
       this.preview_filename = filename;
       this.preview_index = index;
@@ -117,14 +118,14 @@ export default {
       this.$refs.sidebar.getAlbumList();
 
       this.contentAlbumName = "/all";
-      this.contentFriendlyName = "图库";
+      this.contentFriendlyName = this.tr("sidebar.photo_library");
     },
 
     initialize_for_share(album_hash) {
       this.$refs.sidebar.getAlbumListForShare(album_hash);
 
       this.contentAlbumName = "/share";
-      this.contentFriendlyName = "共享的相册";
+      this.contentFriendlyName = this.tr("sidebar.shared_album");
     },
   },
   async mounted() {

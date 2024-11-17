@@ -1,3 +1,5 @@
+import i18n from "@/i18n/index.js"
+
 ///////// NETWORK
 
 function get_secured_json(url) {
@@ -155,4 +157,5 @@ export default {
     get_current_time_f: GetCurrentTimeFormatted,
     get_file_content: GetFileContent,
     calc_center_face_bg_pos: CalculateCenterFaceBackgroundPosition,
+    translate: i18n.i18n_translate,
 }
