@@ -130,23 +130,47 @@ function CalculateCenterFaceBackgroundPosition(photo) {
     let image_w = photo.w;
     let image_h = photo.h;
 
-    // 根据图片的宽高比居中人脸
-    let wh_ratio = photo.w / photo.h;
-    if (wh_ratio > 1.0) {
-        // 如果图片是横图
-        let hw_ratio = photo.h / photo.w;
-        let w_ratio = center_x / image_w;
-        let ratio = Math.max(0, w_ratio - hw_ratio / 2);
-        ratio *= 0.7;
-        return `${ ratio * 100 }% 0%`
+    /*
+                 Preview Window
+      +---------+-------------+---+
+      |         |   +-----+   |   |
+      |         |   |Face |   |   |  Image
+      |         |   +-----+   |   |
+      |         |             |   |
+      +---------+-------------+---+
+
+       其中预览框是正方形。
+     */
+
+    // 判断是否是竖图
+    let is_vertical = image_w < image_h;
+    if (is_vertical) {
+        // 交换长短边，保证长边短边就是物理意义的长短，w必然大于h
+        [image_h, image_w] = [image_w, image_h];
+        [center_x, center_y] = [center_y, center_x];
     }
+
+    // 计算人脸框中点位于整体宽度的比例
+    let relative_pos_ratio = center_x / image_w;
+    // 长边相对短边更长的比例（实际在background position偏移100%的时候，是以这个比例在原图的size上偏移）
+    let actual_offset_ratio = (image_w - image_h) / image_w;
+    // 短边占长边的比例，即，预览框的半长比例
+    let wh_ratio = image_h / image_w;
+    // 计算偏移到图片的100%需要在background position设置的偏移量
+    let full_offset_ratio = 1 / actual_offset_ratio;
+    // 计算偏移到人脸框的位置需要的实际图片偏移量
+    let offset_ratio = full_offset_ratio * (relative_pos_ratio - wh_ratio / 2);
+    // 防止超过图片最大的偏移量（100%）或最小偏移量(0%)
+    offset_ratio = Math.max(0, Math.min(1, offset_ratio));
+
+    // 竖图
+    if (is_vertical) {
+        return `0 ${offset_ratio * 100}%`;
+    }
+    // 横图
     else {
-        // 如果图片是竖图
-        let h_ratio = center_y / image_h;
-        let ratio = h_ratio * 0.7; Math.max(0, h_ratio - wh_ratio / 2)
-        return `0% ${ ratio * 100 }%`;
+        return `${offset_ratio * 100}% 0`;
     }
-    // return '1px 1px';
 }
 
 export default {
