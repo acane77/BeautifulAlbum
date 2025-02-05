@@ -224,6 +224,7 @@ function check_for_env() {
   if [ "$CONFIG_PREFIX/api/album" != "$CONFIG_ALBUM_DIR" ]; then
     echo "-- Copying images to install directory"
     mkdir -p "$CONFIG_PREFIX/api/"
+    rm -rf "$CONFIG_PREFIX/api/album"
     cp -r "$CONFIG_ALBUM_DIR" "$CONFIG_PREFIX/api/album"
   fi
 }
