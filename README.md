@@ -1,7 +1,8 @@
 # Beautiful Album
 
 ## 简介
-使用Vue编写的，iOS相册风格的，纯静态响应式布局的在线相册。
+
+这是一个iOS风格的纯静态在线相册。
 
 <a href="https://acane77.github.io/album-demo.html" STYLE="font-size: 18px">在线Demo</a> (密码为`secret`)
 
@@ -11,11 +12,9 @@
 
 ## 超越妹妹真的太可爱啦！！！
 
-![Preview 1](docs/pcprev1.png)
+![Preview for PC](docs/pc.png)
 
-![Preview 2](docs/pcprev2.png)
-
-![Preview 2](docs/mprev.PNG)
+<img src="docs/mobile.png" height="768px"/>
 
 ## 如何使用？
 
