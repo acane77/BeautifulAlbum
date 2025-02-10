@@ -506,6 +506,19 @@ pre.share_url:hover {
   text-decoration: underline;
 }
 
+.cnav::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backdrop-filter: blur(2px);
+  mask: linear-gradient(to bottom,
+            rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0.9) 50% ,rgba(0, 0, 0, 0) 100%);
+  pointer-events: none;
+}
+
 @media screen and (max-width: 500px) {
   button.large_button {
     width: 100%;
