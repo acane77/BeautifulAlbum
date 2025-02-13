@@ -12,17 +12,20 @@
 
 ## 超越妹妹真的太可爱啦！！！
 
+![Preview for PC](docs/pc_prev.png)
+
 ![Preview for PC](docs/pc.png)
 
 <img src="docs/mobile.png" height="768px"/>
 
 ## 如何使用？
 
-### 方式1、 使用bootstrap.sh脚本自动化构建
+**使用bootstrap.sh脚本自动化构建编译网站项目以及生成相关API。**
 
 **注意**：
-* Windows用户需要使用msys2，git-bash或者WSL运行这个脚本。
+* Windows用户需要使用msys2，git-bash或者WSL2运行这个脚本。
 * NodeJS版本建议使用node 16版本。
+    * 建议使用nvm管理node环境：运行`nvm use 16`切换到node 16版本。
 
 **Step 1. 组织相册**
 
@@ -113,7 +116,7 @@ Options:
 
 可用的推理前端包括以下几种，可使用 `--face-detector` 参数传入，可用 `--face-detector-model` 指定要使用的模型。
 
-* [opencv](https://github.com/opencv/opencv)
+* [opencv](https://github.com/opencv/opencv)：直接使用 `git submodule update --init --recursive`获取模型xml文件。
 * [deepface](https://github.com/serengil/deepface)：使用 `pip install deepface` 安装，默认使用 `yolov8`后端进行人脸检测。在运行时如提示缺少包可以按照提示安装。
 
 使用deepface后端可以利用CUDA进行人脸识别（更快）。
@@ -152,84 +155,7 @@ Options:
                --album-dir=~/my_album \
                --face-detector=deepface --face-detector-model=yolov8 \
                --face-clustering \
-               -- --face_clustering_eps=0.7 --face_clustering_min_samples=4
-```
-
-### 方式2、 手动构建
-
-**首先，编译Web项目**
-
-0. 安装依赖： `npm install`
-1. 构建项目： `npm run build`，生成的代码在dist目录下。复制所有dist目录下的文件到nginx的web root根目录。
-
-**然后生成图片缓存以及相关json文件**
-
-0. 安装依赖：`pip3 install numpy pillow`
-1. 在scripts目录下，新建一个`album`目录，这个目录用来存放相册。
-2. 在`album`目录下新建目录，每一个目录都是一个相册，建议使用英语名，例如：`cutecy`。
-   新建一个和之前的目录名同名的.txt文件可以自定义一个好看的名称，
-   例如新建`cutecy.txt`，并在该文件中保存文本作为显示在界面中的相册名（例如：`超越妹妹可可爱爱`）。在每个相册的目录都可以放入任意的图片。 
-
-3. **运行 generate_api.py。** 如果需要密码访问该相册，传入参数 `--password=mypassword`。  
-4. **在nginx的web root根目录下新建一个api目录，并将albums、album-caches以及生成的所有json文件放入该目录。**
-
-注意：之后每一次更新完照片以后，都需要重新执行上述4-5步骤。
-
----------
-
-上述过程的shell脚本：
-
-```bash
-git clone https://github.com/acane77/BeautifulAlbum
-cd BeautifulAlbum
-
-# 编译项目
-npm install
-npm run build
-
-# 生成需要的文件
-cd scripts
-
-# 安装依赖
-pip install pillow numpy
-
-# 创建相册
-mkdir album
-
-# 创建一个名为cute的相册
-mkdir album/cutecy
-echo "可可爱爱">album/cutecy.txt
-# 复制图片进去
-cp /path/to/your/image/dir/*.jpg album/cutecy
-
-# 生成相关的文件
-# -- 生成API过程中，人脸检测将会消耗更多的时间。如果不想使用人脸框居中功能，请去掉 --center_face 参数。
-# -- 如果不想使用密码功能，请去掉 --password 参数
-python generate_api.py --center_face --password="mypassword"
-
-# 生成用于分享的API
-bash ./build_hash2lib.sh
-
-# 组织生成的文件
-mkdir ../dist/api
-cp -r albums ../dist/api
-cp -r album-caches ../dist/api
-cp *.json ../dist/api
-cd ..
-```
-
-然后可以使用http-server里面直接打开看看有没有配置好
-```bash
-cd dist     # npm构建目录
-npm install -g http-server
-http-server .
-```
-
-也可以打包传到服务器上
-```bash
-cd dist
-tar czf album-website.tar.gz *
-scp album-website.tar.gz $YOUR_SERVER
+               -- --face_clustering_eps=0.75 --face_clustering_min_samples=4
 ```
 
 ---------
