@@ -33,39 +33,27 @@
     <!-- 缩放工具栏 -->
     <div class="zoom-toolbar" v-show="showNavBar">
       <div class="toolbar-group">
-        <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+        <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
+          <span style="font-size: 18px;">+</span>
         </button>
         <button class="zoom-btn zoom-percent-btn" @click="toggleZoomPanel" :title="tr('preview.zoom_percent')">
           <span style="font-size: 12px;">{{ Math.round(scale * 100) }}%</span>
         </button>
-        <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+        <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
+          <span style="font-size: 18px;">−</span>
         </button>
         <button class="zoom-btn" @click="resetZoom" :disabled="scale === initialScale && offsetX === initialOffsetX && offsetY === initialOffsetY" :title="tr('preview.reset_zoom')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" stroke-width="2"/>
-            <path d="M12 8L8 12L12 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
+          <span style="font-size: 14px;">⟲</span>
         </button>
       </div>
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
         <button class="zoom-btn nav-photo-btn" @click="showPreviousPhoto" :disabled="index <= 0" :title="tr('preview.prev_photo')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <span style="font-size: 14px;">◀</span>
         </button>
         <span class="photo-counter">{{ index + 1 }} / {{ photo_count || image_list.length }}</span>
         <button class="zoom-btn nav-photo-btn" @click="showNextPhoto" :disabled="index >= (photo_count || image_list.length) - 1" :title="tr('preview.next_photo')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <span style="font-size: 14px;">▶</span>
         </button>
       </div>
     </div>
@@ -376,6 +364,26 @@ export default {
       if (this.isDragging) {
         this.dragEndX = e.clientX;
         this.dragEndY = e.clientY;
+        
+        // 在默认缩放下，判断是否应该切换图片
+        if (this.scale === this.initialScale) {
+          const deltaX = this.dragEndX - this.dragStartX;
+          const absDeltaX = Math.abs(deltaX);
+          
+          // 水平滑动距离大于50px就切换图片（即使斜着拖动也只看水平距离）
+          if (absDeltaX > 50) {
+            if (deltaX > 0) {
+              // 右滑 -> 下一张
+              this.showNextPhoto();
+            } else {
+              // 左滑 -> 上一张
+              this.showPreviousPhoto();
+            }
+            // 切换图片后，重置拖拽状态，避免触发点击事件
+            this.dragEndX = undefined;
+            this.dragEndY = undefined;
+          }
+        }
       }
       this.isDragging = false;
     },
@@ -471,50 +479,64 @@ export default {
         const currentDistance = this.getTouchDistance(this.touches);
         const currentCenter = this.getTouchCenter(this.touches);
         
-        if (this.lastTouchDistance > 0 && this.lastTouchScale > 0) {
-          // 计算缩放比例（基于双指距离的变化）
+        if (this.lastTouchDistance > 0) {
+          // 计算缩放比例
           const scaleChange = currentDistance / this.lastTouchDistance;
           const newScale = Math.max(this.minScale, Math.min(this.lastTouchScale * scaleChange, this.maxScale));
-          const scaleRatio = newScale / this.lastTouchScale;
           
-          // 双指中心点在屏幕上移动的距离
-          const centerDeltaX = currentCenter.x - this.lastTouchCenter.x;
-          const centerDeltaY = currentCenter.y - this.lastTouchCenter.y;
-          
-          // 计算缩放前的双指中心点对应的图片坐标（相对于图片中心）
-          // 屏幕坐标转图片坐标：(screenPoint - offset) / scale
-          const imgPointX = (this.lastTouchCenter.x - this.offsetX) / this.lastTouchScale;
-          const imgPointY = (this.lastTouchCenter.y - this.offsetY) / this.lastTouchScale;
-          
-          // 缩放后，这个图片点在屏幕上的新位置应该是 currentCenter
-          // 所以：currentCenter = newOffset + imgPoint * newScale
-          // 因此：newOffset = currentCenter - imgPoint * newScale
-          this.offsetX = currentCenter.x - imgPointX * newScale;
-          this.offsetY = currentCenter.y - imgPointY * newScale;
+          // 以双指中心为缩放中心点
+          const scaleRatio = newScale / this.scale;
+          this.offsetX = currentCenter.x - (currentCenter.x - this.offsetX) * scaleRatio;
+          this.offsetY = currentCenter.y - (currentCenter.y - this.offsetY) * scaleRatio;
           this.scale = newScale;
+          
+          // 如果中心点移动，同时调整偏移
+          if (this.lastTouchCenter.x !== 0 || this.lastTouchCenter.y !== 0) {
+            const centerDeltaX = currentCenter.x - this.lastTouchCenter.x;
+            const centerDeltaY = currentCenter.y - this.lastTouchCenter.y;
+            this.offsetX += centerDeltaX;
+            this.offsetY += centerDeltaY;
+          }
           
           this.drawImage();
         }
         
-        // 更新上一次的距离和中心点（用于下次计算）
+        // 更新上一次的距离和中心点
         this.lastTouchDistance = currentDistance;
         this.lastTouchCenter = currentCenter;
-        this.lastTouchScale = this.scale;
       }
     },
     handleTouchEnd(e) {
       e.preventDefault();
       
-      // 如果是单指触摸结束，检查是否为点击
+      // 如果是单指触摸结束，检查是否为点击或滑动切换
       if (this.touches.length === 1 && !this.isPinching && this.isDragging) {
-        const touch = this.touches[0];
-        this.dragEndX = touch.clientX;
-        this.dragEndY = touch.clientY;
+        // 使用 changedTouches 获取刚刚结束的触摸点，这样更准确
+        const endTouch = e.changedTouches && e.changedTouches.length > 0 
+          ? e.changedTouches[0] 
+          : this.touches[0];
+        this.dragEndX = endTouch.clientX;
+        this.dragEndY = endTouch.clientY;
         
-        // 检查是否为点击（移动距离小于阈值）
-        const deltaX = Math.abs(this.dragStartX - this.dragEndX);
-        const deltaY = Math.abs(this.dragStartY - this.dragEndY);
-        if (deltaX < 5 && deltaY < 5) {
+        const deltaX = this.dragEndX - this.dragStartX;
+        const deltaY = this.dragEndY - this.dragStartY;
+        const absDeltaX = Math.abs(deltaX);
+        const absDeltaY = Math.abs(deltaY);
+        
+        // 在默认缩放下，判断是否应该切换图片（即使斜着拖动也只看水平距离）
+        if (this.scale === this.initialScale && absDeltaX > 5) {
+          if (deltaX < 0) {
+            // 右滑 -> 下一张
+            this.showNextPhoto();
+          } else {
+            // 左滑 -> 上一张
+            this.showPreviousPhoto();
+          }
+          // 切换图片后，重置拖拽状态，避免触发点击事件
+          this.dragEndX = undefined;
+          this.dragEndY = undefined;
+        } else if (absDeltaX < 5 && absDeltaY < 5) {
+          // 检查是否为点击（移动距离小于阈值）
           // 切换导航栏显示
           this.showNavBar = !this.showNavBar;
           this.$nextTick(() => {
@@ -775,11 +797,6 @@ canvas {
   font-size: 14px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
-}
-
-.zoom-btn svg {
-  display: block;
-  flex-shrink: 0;
 }
 
 .zoom-btn:hover:not(:disabled) {
