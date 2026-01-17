@@ -14,6 +14,7 @@
       </div>
 
       <div class="right-button-group">
+        <a href="javascript:void(0)" @click="openSettings()" style="margin-right: 10px;"> <IconBase icon-color="#5555ff" height="21"> <IconSettings /> </IconBase> </a>
         <a href="javascript:void(0)" @click="logout()"> <IconBase icon-color="#5555ff" height="21"> <IconExit /> </IconBase> </a>
       </div>
     </div>
@@ -76,10 +77,11 @@ import utils from "@/js/utils";
 import IconBase from "@/icons/IconBase";
 import IconSideBar from "@/icons/IconSideBar";
 import IconExit from "@/icons/IconExit";
+import IconSettings from "@/icons/IconSettings";
 
 export default {
   name: "Sidebar",
-  components: {IconSideBar, IconBase, IconExit},
+  components: {IconSideBar, IconBase, IconExit, IconSettings},
   props: [ "people_enabled" ],
   data: () => ({
     album_list: [],
@@ -135,6 +137,9 @@ export default {
     },
     calcCenterFaceBgpos(photo) {
       return utils.calc_center_face_bg_pos(photo);
+    },
+    openSettings() {
+      this.$emit('open-settings');
     }
   }
 }

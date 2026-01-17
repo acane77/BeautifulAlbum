@@ -12,6 +12,7 @@
       <Sidebar ref="sidebar" :people_enabled="people_enabled"
                @switch-album="(album_name, friendly_name) => { this.contentAlbumName = album_name; this.contentFriendlyName = friendly_name; }"
                @should-show-sidebar="(val, mode) =>  mode === 'mobile' ? sidebar_shown_on_mobile_mode = val : sidebar_shown_on_pc_mode = val"
+               @open-settings="settings_shown = true"
       ></Sidebar>
     </div>
     <div class="preview-container" v-show="preview_shown">
@@ -23,6 +24,9 @@
     <div class="password-container" v-show="password_input_shown">
       <PasswordInput ref="password_input" @submit-password="pwd => checkPassword(pwd)"></PasswordInput>
     </div>
+    <div class="settings-container" v-show="settings_shown">
+      <Settings @close-settings="settings_shown = false"></Settings>
+    </div>
   </div>
 </template>
 
@@ -31,6 +35,7 @@ import Sidebar from "@/components/Sidebar";
 import ContentView from "@/components/Content";
 import Preview from '@/components/Preview';
 import PasswordInput from "@/components/PasswordInput";
+import Settings from "@/components/Settings";
 
 import utils from "@/js/utils";
 let md5 = require('js-md5');
@@ -38,7 +43,7 @@ let md5 = require('js-md5');
 export default {
   name: 'App',
   components: {
-    Sidebar, ContentView, Preview, PasswordInput
+    Sidebar, ContentView, Preview, PasswordInput, Settings
   },
   data: () => ({
     activeName: 'beautiful-album',
@@ -46,6 +51,7 @@ export default {
     sidebar_shown_on_mobile_mode: false,
     sidebar_shown_on_pc_mode: true,
     password_input_shown: false,
+    settings_shown: false,
 
     preview_shown: false,
     preview_filename: '',
@@ -301,6 +307,15 @@ body {
 div.preview-container {
   position: fixed;
   z-index: 9999;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+}
+
+div.settings-container {
+  position: fixed;
+  z-index: 10000;
   top: 0;
   left: 0;
   height: 100%;

@@ -103,8 +103,8 @@ def read_file(path):
 def get_album_list():
     if not is_album_path_existed():
         raise Exception('Album directory {} does not exist'.format(get_album_path()))
-    create_cache_dir()
     files = os.listdir(get_album_path())
+    create_cache_dir()
     album_names = []
     for f in files:
         if os.path.isdir(get_album_path(f)):

@@ -39,4 +39,13 @@ export default {
     // i18n of Preview.vue
     "preview.loading": "Loading image...",
     "preview.download_btn": "Download",
+
+    // i18n of Settings.vue
+    "Settings": "Settings",
+    "General": "General",
+    "Language": "Language",
+    "About": "About",
+    "Close": "Close",
+    "settings.language_hint": "The page will automatically refresh after changing the language.",
+    "settings.license": "Licensed: MIT License",
 }

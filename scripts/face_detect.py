@@ -23,13 +23,13 @@ def create_detector(detector_name: str, *args, **kwargs):
     return pipeline_module.DetectorImpl(*args, **kwargs)
 
 def test_face_detection(detector: FaceDetectorBase):
-    src = 'test_data/ycy.jpg'
+    src = '/home/acane/projects/acane77.github.io/album/test/gitlacane.jpg'
     rects = detector(image_path=src)
     detector.visualize(image=src, rects=rects)
 
 if __name__ == '__main__':
     test_cases = [
-        [ 'opencv', [ '../third_party/opencv/data/haarcascades/haarcascade_frontalface_default.xml' ] ],
+        #[ 'opencv', [ '../third_party/opencv/data/haarcascades/haarcascade_frontalface_default.xml' ] ],
         [ 'deepface', [ 'yolov8' ] ],
     ]
     for test_case in test_cases:

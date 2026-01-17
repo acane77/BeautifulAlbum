@@ -45,4 +45,13 @@ export default {
     "preview.loading": "正在加载图片...",
     "preview.download_btn": "下载",
     "Album": "相册",
+
+    // i18n of Settings.vue
+    "Settings": "设置",
+    "General": "通用",
+    "Language": "语言",
+    "About": "关于",
+    "Close": "关闭",
+    "settings.language_hint": "修改语言后会自动刷新页面。",
+    "settings.license": "Licensed: MIT License",
 }
