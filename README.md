@@ -16,6 +16,8 @@
 
 ![Preview for PC](docs/pc.png)
 
+![Image Preview UI](docs/image_prev.png)
+
 <img src="docs/mobile.png" height="768px"/>
 
 ## 如何使用？
