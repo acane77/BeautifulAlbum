@@ -124,7 +124,9 @@ export default {
       // 小工具栏相关
       showZoomPanel: false,
       zoomPanelLeft: 0,
-      zoomPanelTop: 0
+      zoomPanelTop: 0,
+      // 滑动切换相关
+      swipeThreshold: 50 // 滑动阈值，超过这个距离才触发切换
     }
   },
   computed: {
@@ -259,6 +261,20 @@ export default {
       this.isDarkMode = darkModeMediaQuery.matches;
       return this.isDarkMode;
     },
+    isAtInitialZoomState() {
+      // 检查是否处于初始状态（scale和offset都等于初始值）
+      const scaleMatch = Math.abs(this.scale - this.initialScale) < 0.001;
+      const offsetXMatch = Math.abs(this.offsetX - this.initialOffsetX) < 1;
+      const offsetYMatch = Math.abs(this.offsetY - this.initialOffsetY) < 1;
+      return scaleMatch && offsetXMatch && offsetYMatch;
+    },
+    wasAtInitialZoomStateAtStart() {
+      // 检查拖动开始时是否处于初始状态
+      const scaleMatch = Math.abs(this.scale - this.initialScale) < 0.001;
+      const offsetXMatch = Math.abs(this.dragStartOffsetX - this.initialOffsetX) < 1;
+      const offsetYMatch = Math.abs(this.dragStartOffsetY - this.initialOffsetY) < 1;
+      return scaleMatch && offsetXMatch && offsetYMatch;
+    },
     drawImage() {
       const canvas = this.$refs.canvas;
       if (!canvas) return;
@@ -353,6 +369,8 @@ export default {
       if (this.isDragging) {
         const deltaX = e.clientX - this.dragStartX;
         const deltaY = e.clientY - this.dragStartY;
+        
+        // 始终允许拖动图片，展现拖动效果
         this.offsetX = this.dragStartOffsetX + deltaX;
         this.offsetY = this.dragStartOffsetY + deltaY;
         this.drawImage();
@@ -364,6 +382,32 @@ export default {
       if (this.isDragging) {
         this.dragEndX = e.clientX;
         this.dragEndY = e.clientY;
+        
+        // 如果拖动开始时处于初始状态，检查是否为左右滑动切换图片
+        if (this.wasAtInitialZoomStateAtStart()) {
+          const deltaX = this.dragEndX - this.dragStartX;
+          const deltaY = this.dragEndY - this.dragStartY;
+          const absDeltaX = Math.abs(deltaX);
+          const absDeltaY = Math.abs(deltaY);
+          
+          // 如果是水平滑动且移动距离超过阈值，切换图片
+          if (absDeltaX > absDeltaY && absDeltaX > this.swipeThreshold) {
+            if (deltaX > 0) {
+              // 向右滑动，显示上一张
+              this.showPreviousPhoto();
+            } else {
+              // 向左滑动，显示下一张
+              this.showNextPhoto();
+            }
+            this.isDragging = false;
+            return;
+          } else {
+            // 移动距离不够，恢复初始位置
+            this.offsetX = this.initialOffsetX;
+            this.offsetY = this.initialOffsetY;
+            this.drawImage();
+          }
+        }
       }
       this.isDragging = false;
     },
@@ -445,6 +489,8 @@ export default {
           const touch = this.touches[0];
           const deltaX = touch.clientX - this.dragStartX;
           const deltaY = touch.clientY - this.dragStartY;
+          
+          // 始终允许拖动图片，展现拖动效果
           this.offsetX = this.dragStartOffsetX + deltaX;
           this.offsetY = this.dragStartOffsetY + deltaY;
           this.dragEndX = touch.clientX;
@@ -489,11 +535,46 @@ export default {
     handleTouchEnd(e) {
       e.preventDefault();
       
-      // 如果是单指触摸结束，检查是否为点击
+      // 如果是单指触摸结束，检查是否为点击或滑动切换
       if (this.touches.length === 1 && !this.isPinching && this.isDragging) {
         const touch = this.touches[0];
         this.dragEndX = touch.clientX;
         this.dragEndY = touch.clientY;
+        
+        // 如果拖动开始时处于初始状态，检查是否为左右滑动切换图片
+        if (this.wasAtInitialZoomStateAtStart()) {
+          const deltaX = this.dragEndX - this.dragStartX;
+          const deltaY = this.dragEndY - this.dragStartY;
+          const absDeltaX = Math.abs(deltaX);
+          const absDeltaY = Math.abs(deltaY);
+          
+          // 如果是水平滑动且移动距离超过阈值，切换图片
+          if (absDeltaX > absDeltaY && absDeltaX > this.swipeThreshold) {
+            if (deltaX > 0) {
+              // 向右滑动，显示上一张
+              this.showPreviousPhoto();
+            } else {
+              // 向左滑动，显示下一张
+              this.showNextPhoto();
+            }
+            this.isDragging = false;
+            this.dragEndX = undefined;
+            this.dragEndY = undefined;
+            // 更新触摸点列表
+            this.touches = Array.from(e.touches);
+            if (this.touches.length === 0) {
+              this.isPinching = false;
+              this.lastTouchDistance = 0;
+              this.lastTouchCenter = { x: 0, y: 0 };
+            }
+            return;
+          } else {
+            // 移动距离不够，恢复初始位置
+            this.offsetX = this.initialOffsetX;
+            this.offsetY = this.initialOffsetY;
+            this.drawImage();
+          }
+        }
         
         // 检查是否为点击（移动距离小于阈值）
         const deltaX = Math.abs(this.dragStartX - this.dragEndX);
@@ -742,6 +823,66 @@ canvas {
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+}
+
+@media screen and (max-width: 450px) {
+  .zoom-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    transform: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 10px 8px;
+    gap: 6px;
+    justify-content: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .zoom-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .toolbar-group {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  
+  .zoom-btn span {
+    font-size: 14px !important;
+  }
+  
+  .zoom-percent-btn {
+    min-width: 44px;
+  }
+  
+  .zoom-percent-btn span {
+    font-size: 11px !important;
+  }
+  
+  .photo-counter {
+    font-size: 11px;
+    min-width: 45px;
+    padding: 0 3px;
+  }
+  
+  .toolbar-divider {
+    height: 20px;
+    margin: 0 2px;
   }
 }
 
