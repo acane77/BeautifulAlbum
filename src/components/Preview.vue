@@ -32,18 +32,30 @@
     
     <!-- 缩放工具栏 -->
     <div class="zoom-toolbar" v-show="showNavBar">
-      <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
-        <span style="font-size: 18px;">+</span>
-      </button>
-      <button class="zoom-btn zoom-percent-btn" @click="toggleZoomPanel" :title="tr('preview.zoom_percent')">
-        <span style="font-size: 12px;">{{ Math.round(scale * 100) }}%</span>
-      </button>
-      <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
-        <span style="font-size: 18px;">−</span>
-      </button>
-      <button class="zoom-btn" @click="resetZoom" :disabled="scale === initialScale && offsetX === initialOffsetX && offsetY === initialOffsetY" :title="tr('preview.reset_zoom')">
-        <span style="font-size: 14px;">⟲</span>
-      </button>
+      <div class="toolbar-group">
+        <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
+          <span style="font-size: 18px;">+</span>
+        </button>
+        <button class="zoom-btn zoom-percent-btn" @click="toggleZoomPanel" :title="tr('preview.zoom_percent')">
+          <span style="font-size: 12px;">{{ Math.round(scale * 100) }}%</span>
+        </button>
+        <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
+          <span style="font-size: 18px;">−</span>
+        </button>
+        <button class="zoom-btn" @click="resetZoom" :disabled="scale === initialScale && offsetX === initialOffsetX && offsetY === initialOffsetY" :title="tr('preview.reset_zoom')">
+          <span style="font-size: 14px;">⟲</span>
+        </button>
+      </div>
+      <div class="toolbar-divider"></div>
+      <div class="toolbar-group">
+        <button class="zoom-btn nav-photo-btn" @click="showPreviousPhoto" :disabled="index <= 0" :title="tr('preview.prev_photo')">
+          <span style="font-size: 14px;">◀</span>
+        </button>
+        <span class="photo-counter">{{ index + 1 }} / {{ photo_count || image_list.length }}</span>
+        <button class="zoom-btn nav-photo-btn" @click="showNextPhoto" :disabled="index >= (photo_count || image_list.length) - 1" :title="tr('preview.next_photo')">
+          <span style="font-size: 14px;">▶</span>
+        </button>
+      </div>
     </div>
     
     <!-- 缩放小工具栏 -->
@@ -78,7 +90,7 @@ import utils from "@/js/utils";
 
 export default {
   name: "Preview",
-  props: [ 'current_album_name', 'current_photo_filename', 'image_list', 'index', 'catalog_name', 'current_photo' ],
+  props: [ 'current_album_name', 'current_photo_filename', 'image_list', 'index', 'catalog_name', 'current_photo', 'photo_count' ],
   data() {
     return {
       showNavBar: true,
@@ -133,6 +145,28 @@ export default {
     tr(x, ...args) { return utils.translate(x, ...args) },
     raise_hide_preview() {
       this.$emit('hide-preview');
+    },
+    showPreviousPhoto() {
+      if (this.index > 0) {
+        const newIndex = this.index - 1;
+        const photo = this.image_list[newIndex];
+        this.$emit('change-photo', photo.name, this.image_list, newIndex, photo.al, photo);
+      }
+    },
+    showNextPhoto() {
+      const maxIndex = (this.photo_count || this.image_list.length) - 1;
+      if (this.index < maxIndex) {
+        const newIndex = this.index + 1;
+        
+        // 如果图片已加载，直接切换
+        if (newIndex < this.image_list.length) {
+          const photo = this.image_list[newIndex];
+          this.$emit('change-photo', photo.name, this.image_list, newIndex, photo.al, photo);
+        } else {
+          // 如果图片尚未加载，触发加载更多图片，并传递目标索引
+          this.$emit('load-more-photos', newIndex);
+        }
+      }
     },
     thumbnail_path_at_index(i) {
       return `/api/album-cache/${this.image_list[i].al}/${this.image_list[i].name}`;
@@ -656,6 +690,7 @@ canvas {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
+  align-items: center;
   gap: 10px;
   /* iOS风格毛玻璃效果 */
   background: rgba(255, 255, 255, 0.7);
@@ -666,6 +701,40 @@ canvas {
   padding: 8px 12px;
   border-radius: 12px;
   z-index: 1000;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(0, 0, 0, 0.2);
+  margin: 0 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .toolbar-divider {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.photo-counter {
+  font-size: 13px;
+  color: #333;
+  user-select: none;
+  padding: 0 4px;
+  min-width: 50px;
+  text-align: center;
+}
+
+@media (prefers-color-scheme: dark) {
+  .photo-counter {
+    color: #fff;
+  }
 }
 
 @media (prefers-color-scheme: dark) {

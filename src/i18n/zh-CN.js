@@ -47,6 +47,8 @@ export default {
     "preview.zoom_in": "放大",
     "preview.zoom_out": "缩小",
     "preview.reset_zoom": "重置",
+    "preview.prev_photo": "上一张",
+    "preview.next_photo": "下一张",
     "Album": "相册",
 
     // i18n of Settings.vue

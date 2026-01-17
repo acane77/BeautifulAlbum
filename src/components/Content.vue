@@ -180,7 +180,7 @@ export default {
       this.$emit('should-show-sidebar', val, mode);
     },
     raise_event_show_preview(image_file_name, photo_list, photo_index, album_name, photo_obj) {
-      this.$emit('preview-photo', image_file_name, photo_list, photo_index, album_name, photo_obj);
+      this.$emit('preview-photo', image_file_name, photo_list, photo_index, album_name, photo_obj, this.photo_count);
     },
     async load_image() {
       // console.log("load album:", this.album_get_count_json_name)

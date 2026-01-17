@@ -1,10 +1,10 @@
 <template>
   <div>
     <div :class="['content-container', sidebar_shown_on_pc_mode?'':'side-hidden-screen']">
-      <ContentView :base_name="contentAlbumName" :album_friendly_name="contentFriendlyName"
+      <ContentView ref="contentView" :base_name="contentAlbumName" :album_friendly_name="contentFriendlyName"
                    @should-show-sidebar="(val, mode) =>  mode === 'mobile' ? sidebar_shown_on_mobile_mode = val : sidebar_shown_on_pc_mode = val"
                    :sidebar_shown_pc = "sidebar_shown_on_pc_mode"
-                   @preview-photo="(a,b,c,d,e) => previewPhoto(a,b,c,d,e)"
+                   @preview-photo="(a,b,c,d,e,f) => previewPhoto(a,b,c,d,e,f)"
       ></ContentView>
     </div>
     <div class="sidebar-mobile-mask" v-show="sidebar_shown_on_mobile_mode" @click="sidebar_shown_on_mobile_mode = false"></div>
@@ -17,8 +17,10 @@
     </div>
     <div class="preview-container" v-show="preview_shown">
       <Preview  :current_photo_filename="preview_filename" :image_list="preview_imagelist" :index="preview_index" :current_album_name="preview_album_name"
-                :catalog_name="contentFriendlyName" :current_photo="preview_current_obj"
+                :catalog_name="contentFriendlyName" :current_photo="preview_current_obj" :photo_count="preview_photo_count"
                 @hide-preview="preview_shown = false"
+                @change-photo="(a,b,c,d,e) => previewPhoto(a,b,c,d,e, preview_photo_count)"
+                @load-more-photos="(targetIndex) => loadMorePhotos(targetIndex)"
       ></Preview>
     </div>
     <div class="password-container" v-show="password_input_shown">
@@ -59,6 +61,7 @@ export default {
     preview_index: 0,
     preview_album_name: '',
     preview_current_obj: '',
+    preview_photo_count: 0,
 
     contentAlbumName: "",
     contentFriendlyName: "",
@@ -68,13 +71,28 @@ export default {
   }),
   methods: {
     tr(x, ...args) { return utils.translate(x, ...args) },
-    previewPhoto(filename, photo_list, index, album_name, photo_obj) {
+    previewPhoto(filename, photo_list, index, album_name, photo_obj, photo_count) {
       this.preview_filename = filename;
       this.preview_index = index;
       this.preview_imagelist = photo_list;
       this.preview_album_name = album_name;
       this.preview_current_obj = photo_obj;
+      this.preview_photo_count = photo_count || photo_list.length;
       this.preview_shown = true;
+    },
+    async loadMorePhotos(targetIndex) {
+      if (this.$refs.contentView) {
+        await this.$refs.contentView.load_image();
+        // 等待加载完成后，检查目标索引是否已加载，如果是则切换
+        this.$nextTick(() => {
+          // 使用 Content 的 photo_list，它应该和 preview_imagelist 是同一个引用
+          const photoList = this.$refs.contentView.photo_list;
+          if (targetIndex !== undefined && photoList && targetIndex < photoList.length) {
+            const photo = photoList[targetIndex];
+            this.previewPhoto(photo.name, photoList, targetIndex, photo.al, photo, this.preview_photo_count);
+          }
+        });
+      }
     },
 
     async requirePassword() {

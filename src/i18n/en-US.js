@@ -42,6 +42,8 @@ export default {
     "preview.zoom_in": "Zoom In",
     "preview.zoom_out": "Zoom Out",
     "preview.reset_zoom": "Reset",
+    "preview.prev_photo": "Previous",
+    "preview.next_photo": "Next",
 
     // i18n of Settings.vue
     "Settings": "Settings",
