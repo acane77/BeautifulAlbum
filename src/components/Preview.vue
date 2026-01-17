@@ -35,12 +35,38 @@
       <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
         <span style="font-size: 18px;">+</span>
       </button>
+      <button class="zoom-btn zoom-percent-btn" @click="toggleZoomPanel" :title="tr('preview.zoom_percent')">
+        <span style="font-size: 12px;">{{ Math.round(scale * 100) }}%</span>
+      </button>
       <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
         <span style="font-size: 18px;">−</span>
       </button>
       <button class="zoom-btn" @click="resetZoom" :disabled="scale === initialScale && offsetX === initialOffsetX && offsetY === initialOffsetY" :title="tr('preview.reset_zoom')">
         <span style="font-size: 14px;">⟲</span>
       </button>
+    </div>
+    
+    <!-- 缩放小工具栏 -->
+    <div class="zoom-panel" 
+         v-show="showZoomPanel && showNavBar"
+         :style="{ left: zoomPanelLeft + 'px', top: zoomPanelTop + 'px' }"
+         ref="zoomPanel">
+      <div class="zoom-panel-input-group">
+        <input type="range" 
+               :min="minScale * 100" 
+               :max="maxScale * 100" 
+               :value="scale * 100"
+               @input="handleSliderChange"
+               class="zoom-slider">
+        <input type="number" 
+               :min="minScale * 100" 
+               :max="maxScale * 100"
+               :value="Math.round(scale * 100)"
+               @input="handlePercentInput"
+               @blur="handlePercentBlur"
+               class="zoom-percent-input">
+        <span class="zoom-percent-suffix">%</span>
+      </div>
     </div>
   </div>
 </template>
@@ -82,7 +108,11 @@ export default {
       lastTouchDistance: 0,
       lastTouchCenter: { x: 0, y: 0 },
       lastTouchScale: 1,
-      isPinching: false
+      isPinching: false,
+      // 小工具栏相关
+      showZoomPanel: false,
+      zoomPanelLeft: 0,
+      zoomPanelTop: 0
     }
   },
   computed: {
@@ -95,6 +125,9 @@ export default {
     photo_path() {
       return `/api/album/${this.current_album_name}/${this.current_photo_filename}`;
     },
+    zoomPercent() {
+      return Math.round(this.scale * 100);
+    }
   },
   methods: {
     tr(x, ...args) { return utils.translate(x, ...args) },
@@ -463,6 +496,71 @@ export default {
         this.dragEndX = touch.clientX;
         this.dragEndY = touch.clientY;
       }
+    },
+    // 小工具栏相关方法
+    toggleZoomPanel() {
+      this.showZoomPanel = !this.showZoomPanel;
+      if (this.showZoomPanel) {
+        // 初始化位置，放在主工具栏正上方，间隔10px
+        this.$nextTick(() => {
+          const toolbar = document.querySelector('.zoom-toolbar');
+          const zoomPanel = this.$refs.zoomPanel;
+          if (toolbar && zoomPanel) {
+            const toolbarRect = toolbar.getBoundingClientRect();
+            const panelRect = zoomPanel.getBoundingClientRect();
+            // 左右居中对齐
+            this.zoomPanelLeft = toolbarRect.left + (toolbarRect.width - panelRect.width) / 2;
+            // 主工具栏上方，间隔10px
+            this.zoomPanelTop = toolbarRect.top - panelRect.height - 10;
+          }
+        });
+      }
+    },
+    handleSliderChange(e) {
+      const newScale = parseFloat(e.target.value) / 100;
+      const canvas = this.$refs.canvas;
+      if (!canvas) return;
+      
+      // 以画布中心为缩放中心点
+      const canvasCenterX = canvas.width / 2;
+      const canvasCenterY = canvas.height / 2;
+      const oldScale = this.scale;
+      const scaleRatio = newScale / oldScale;
+      
+      this.offsetX = canvasCenterX - (canvasCenterX - this.offsetX) * scaleRatio;
+      this.offsetY = canvasCenterY - (canvasCenterY - this.offsetY) * scaleRatio;
+      this.scale = Math.max(this.minScale, Math.min(newScale, this.maxScale));
+      this.drawImage();
+    },
+    handlePercentInput(e) {
+      // 实时更新滑块（可选，如果希望输入时立即生效）
+    },
+    handlePercentBlur(e) {
+      const inputValue = parseFloat(e.target.value);
+      if (isNaN(inputValue)) {
+        // 如果输入无效，恢复为当前值
+        e.target.value = Math.round(this.scale * 100);
+        return;
+      }
+      
+      const clampedValue = Math.max(this.minScale * 100, Math.min(inputValue, this.maxScale * 100));
+      const newScale = clampedValue / 100;
+      const canvas = this.$refs.canvas;
+      if (!canvas) return;
+      
+      // 以画布中心为缩放中心点
+      const canvasCenterX = canvas.width / 2;
+      const canvasCenterY = canvas.height / 2;
+      const oldScale = this.scale;
+      const scaleRatio = newScale / oldScale;
+      
+      this.offsetX = canvasCenterX - (canvasCenterX - this.offsetX) * scaleRatio;
+      this.offsetY = canvasCenterY - (canvasCenterY - this.offsetY) * scaleRatio;
+      this.scale = newScale;
+      this.drawImage();
+      
+      // 更新输入框值为修正后的值
+      e.target.value = Math.round(this.scale * 100);
     }
   },
   watch: {
@@ -477,7 +575,11 @@ export default {
         this.loadImages();
       }
     },
-    showNavBar() {
+    showNavBar(newVal) {
+      // 隐藏导航栏时也隐藏小工具栏
+      if (!newVal) {
+        this.showZoomPanel = false;
+      }
       this.$nextTick(() => {
         this.drawImage();
       });
@@ -622,6 +724,138 @@ canvas {
 
   .zoom-btn:disabled {
     background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.zoom-percent-btn {
+  min-width: 50px;
+}
+
+.zoom-panel {
+  position: fixed;
+  width: 200px;
+  /* iOS风格毛玻璃效果 - 与主工具栏一致 */
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  padding: 8px 12px;
+  border-radius: 12px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .zoom-panel {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  }
+}
+
+.zoom-panel-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.zoom-panel-input-group .zoom-slider {
+  flex: 1;
+  padding: 0;
+}
+
+.zoom-slider {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.1);
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+
+.zoom-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.zoom-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .zoom-slider {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .zoom-slider::-webkit-slider-thumb {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  .zoom-slider::-moz-range-thumb {
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+}
+
+.zoom-percent-input {
+  width: 50px;
+  padding: 4px 8px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #333;
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+}
+
+.zoom-percent-input:focus {
+  border-color: rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .zoom-percent-input {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+  
+  .zoom-percent-input:focus {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+.zoom-percent-suffix {
+  font-size: 14px;
+  color: #666;
+  user-select: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .zoom-percent-suffix {
+    color: #ccc;
   }
 }
 
