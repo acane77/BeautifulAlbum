@@ -8,6 +8,10 @@
          @mouseleave="handleMouseUp"
          @wheel="handleWheel"
          @click="handleCanvasClick"
+         @touchstart="handleTouchStart"
+         @touchmove="handleTouchMove"
+         @touchend="handleTouchEnd"
+         @touchcancel="handleTouchEnd"
          ref="canvasContainer">
       <canvas ref="canvas" :width="canvasWidth" :height="canvasHeight"></canvas>
     </div>
@@ -72,7 +76,13 @@ export default {
       initialScale: 1,
       initialOffsetX: 0,
       initialOffsetY: 0,
-      isDarkMode: false
+      isDarkMode: false,
+      // 触摸相关
+      touches: [],
+      lastTouchDistance: 0,
+      lastTouchCenter: { x: 0, y: 0 },
+      lastTouchScale: 1,
+      isPinching: false
     }
   },
   computed: {
@@ -189,9 +199,13 @@ export default {
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
-      // 根据系统主题设置背景色
-      this.checkDarkMode();
-      ctx.fillStyle = this.isDarkMode ? '#000000' : '#ffffff';
+      // 隐藏标题栏时强制使用黑色背景，否则根据系统主题设置背景色
+      if (!this.showNavBar) {
+        ctx.fillStyle = '#000000';
+      } else {
+        this.checkDarkMode();
+        ctx.fillStyle = this.isDarkMode ? '#000000' : '#ffffff';
+      }
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       
       if (!this.image && !this.thumbnail) return;
@@ -303,6 +317,152 @@ export default {
       // 重置拖拽结束位置
       this.dragEndX = undefined;
       this.dragEndY = undefined;
+    },
+    // 计算两点之间的距离
+    getTouchDistance(touches) {
+      if (touches.length < 2) return 0;
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    },
+    // 计算两点的中心点
+    getTouchCenter(touches) {
+      if (touches.length === 0) return { x: 0, y: 0 };
+      if (touches.length === 1) {
+        const canvas = this.$refs.canvas;
+        if (!canvas) return { x: 0, y: 0 };
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: touches[0].clientX - rect.left,
+          y: touches[0].clientY - rect.top
+        };
+      }
+      const canvas = this.$refs.canvas;
+      if (!canvas) return { x: 0, y: 0 };
+      const rect = canvas.getBoundingClientRect();
+      const x = (touches[0].clientX + touches[1].clientX) / 2 - rect.left;
+      const y = (touches[0].clientY + touches[1].clientY) / 2 - rect.top;
+      return { x, y };
+    },
+    handleTouchStart(e) {
+      e.preventDefault();
+      this.touches = Array.from(e.touches);
+      
+      if (this.touches.length === 1) {
+        // 单指触摸 - 准备拖动
+        const touch = this.touches[0];
+        this.isDragging = true;
+        this.dragStartX = touch.clientX;
+        this.dragStartY = touch.clientY;
+        this.dragStartOffsetX = this.offsetX;
+        this.dragStartOffsetY = this.offsetY;
+        this.dragEndX = touch.clientX;
+        this.dragEndY = touch.clientY;
+        this.isPinching = false;
+      } else if (this.touches.length === 2) {
+        // 双指触摸 - 准备缩放
+        this.isPinching = true;
+        this.isDragging = false;
+        this.lastTouchDistance = this.getTouchDistance(this.touches);
+        this.lastTouchCenter = this.getTouchCenter(this.touches);
+        this.lastTouchScale = this.scale;
+      }
+    },
+    handleTouchMove(e) {
+      e.preventDefault();
+      this.touches = Array.from(e.touches);
+      
+      if (this.touches.length === 1 && !this.isPinching) {
+        // 单指拖动
+        if (this.isDragging) {
+          const touch = this.touches[0];
+          const deltaX = touch.clientX - this.dragStartX;
+          const deltaY = touch.clientY - this.dragStartY;
+          this.offsetX = this.dragStartOffsetX + deltaX;
+          this.offsetY = this.dragStartOffsetY + deltaY;
+          this.dragEndX = touch.clientX;
+          this.dragEndY = touch.clientY;
+          this.drawImage();
+        }
+      } else if (this.touches.length === 2) {
+        // 双指捏合缩放
+        this.isPinching = true;
+        this.isDragging = false;
+        
+        const currentDistance = this.getTouchDistance(this.touches);
+        const currentCenter = this.getTouchCenter(this.touches);
+        
+        if (this.lastTouchDistance > 0) {
+          // 计算缩放比例
+          const scaleChange = currentDistance / this.lastTouchDistance;
+          const newScale = Math.max(this.minScale, Math.min(this.lastTouchScale * scaleChange, this.maxScale));
+          
+          // 以双指中心为缩放中心点
+          const scaleRatio = newScale / this.scale;
+          this.offsetX = currentCenter.x - (currentCenter.x - this.offsetX) * scaleRatio;
+          this.offsetY = currentCenter.y - (currentCenter.y - this.offsetY) * scaleRatio;
+          this.scale = newScale;
+          
+          // 如果中心点移动，同时调整偏移
+          if (this.lastTouchCenter.x !== 0 || this.lastTouchCenter.y !== 0) {
+            const centerDeltaX = currentCenter.x - this.lastTouchCenter.x;
+            const centerDeltaY = currentCenter.y - this.lastTouchCenter.y;
+            this.offsetX += centerDeltaX;
+            this.offsetY += centerDeltaY;
+          }
+          
+          this.drawImage();
+        }
+        
+        // 更新上一次的距离和中心点
+        this.lastTouchDistance = currentDistance;
+        this.lastTouchCenter = currentCenter;
+      }
+    },
+    handleTouchEnd(e) {
+      e.preventDefault();
+      
+      // 如果是单指触摸结束，检查是否为点击
+      if (this.touches.length === 1 && !this.isPinching && this.isDragging) {
+        const touch = this.touches[0];
+        this.dragEndX = touch.clientX;
+        this.dragEndY = touch.clientY;
+        
+        // 检查是否为点击（移动距离小于阈值）
+        const deltaX = Math.abs(this.dragStartX - this.dragEndX);
+        const deltaY = Math.abs(this.dragStartY - this.dragEndY);
+        if (deltaX < 5 && deltaY < 5) {
+          // 切换导航栏显示
+          this.showNavBar = !this.showNavBar;
+          this.$nextTick(() => {
+            this.drawImage();
+          });
+        }
+      }
+      
+      // 更新触摸点列表
+      this.touches = Array.from(e.touches);
+      
+      // 如果还有触摸点，继续处理
+      if (this.touches.length === 0) {
+        this.isDragging = false;
+        this.isPinching = false;
+        this.lastTouchDistance = 0;
+        this.lastTouchCenter = { x: 0, y: 0 };
+        this.dragEndX = undefined;
+        this.dragEndY = undefined;
+      } else if (this.touches.length === 1) {
+        // 从双指变为单指，重新初始化单指拖动
+        this.isPinching = false;
+        const touch = this.touches[0];
+        this.isDragging = true;
+        this.dragStartX = touch.clientX;
+        this.dragStartY = touch.clientY;
+        this.dragStartOffsetX = this.offsetX;
+        this.dragStartOffsetY = this.offsetY;
+        this.dragEndX = touch.clientX;
+        this.dragEndY = touch.clientY;
+      }
     }
   },
   watch: {
@@ -362,12 +522,20 @@ export default {
   height: 100%;
   cursor: grab;
   background-color: #fff;
+  /* 防止触摸时出现默认行为 */
+  touch-action: none;
+  -ms-touch-action: none;
 }
 
 @media (prefers-color-scheme: dark) {
   .canvas-container {
     background-color: #000;
   }
+}
+
+/* 隐藏标题栏时强制使用黑色背景 */
+.preview-hidden-navbar .canvas-container {
+  background-color: #000 !important;
 }
 
 .canvas-container:active {
