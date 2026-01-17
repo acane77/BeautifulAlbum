@@ -15,16 +15,14 @@
                @open-settings="settings_shown = true"
       ></Sidebar>
     </div>
-    <transition name="preview-slide">
-      <div class="preview-container" v-if="preview_shown">
-        <Preview  :current_photo_filename="preview_filename" :image_list="preview_imagelist" :index="preview_index" :current_album_name="preview_album_name"
-                  :catalog_name="contentFriendlyName" :current_photo="preview_current_obj" :photo_count="preview_photo_count"
-                  @hide-preview="preview_shown = false"
-                  @change-photo="(a,b,c,d,e) => previewPhoto(a,b,c,d,e, preview_photo_count)"
-                  @load-more-photos="(targetIndex) => loadMorePhotos(targetIndex)"
-        ></Preview>
-      </div>
-    </transition>
+    <div class="preview-container" v-show="preview_shown">
+      <Preview  :current_photo_filename="preview_filename" :image_list="preview_imagelist" :index="preview_index" :current_album_name="preview_album_name"
+                :catalog_name="contentFriendlyName" :current_photo="preview_current_obj" :photo_count="preview_photo_count"
+                @hide-preview="preview_shown = false"
+                @change-photo="(a,b,c,d,e) => previewPhoto(a,b,c,d,e, preview_photo_count)"
+                @load-more-photos="(targetIndex) => loadMorePhotos(targetIndex)"
+      ></Preview>
+    </div>
     <div class="password-container" v-show="password_input_shown">
       <PasswordInput ref="password_input" @submit-password="pwd => checkPassword(pwd)"></PasswordInput>
     </div>
@@ -331,23 +329,6 @@ div.preview-container {
   left: 0;
   height: 100%;
   width: 100%;
-}
-
-/* Preview 页面动画 */
-.preview-slide-enter-active {
-  transition: transform 0.2s;
-}
-
-.preview-slide-leave-active {
-  transition: transform 0.2s;
-}
-
-.preview-slide-enter {
-  transform: translateX(100%);
-}
-
-.preview-slide-leave-to {
-  transform: translateX(100%);
 }
 
 div.settings-container {

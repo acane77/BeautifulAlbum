@@ -124,9 +124,7 @@ export default {
       // 小工具栏相关
       showZoomPanel: false,
       zoomPanelLeft: 0,
-      zoomPanelTop: 0,
-      // 滑动切换相关
-      swipeThreshold: 50 // 滑动阈值，超过这个距离才触发切换
+      zoomPanelTop: 0
     }
   },
   computed: {
@@ -261,20 +259,6 @@ export default {
       this.isDarkMode = darkModeMediaQuery.matches;
       return this.isDarkMode;
     },
-    isAtInitialZoomState() {
-      // 检查是否处于初始状态（scale和offset都等于初始值）
-      const scaleMatch = Math.abs(this.scale - this.initialScale) < 0.001;
-      const offsetXMatch = Math.abs(this.offsetX - this.initialOffsetX) < 1;
-      const offsetYMatch = Math.abs(this.offsetY - this.initialOffsetY) < 1;
-      return scaleMatch && offsetXMatch && offsetYMatch;
-    },
-    wasAtInitialZoomStateAtStart() {
-      // 检查拖动开始时是否处于初始状态
-      const scaleMatch = Math.abs(this.scale - this.initialScale) < 0.001;
-      const offsetXMatch = Math.abs(this.dragStartOffsetX - this.initialOffsetX) < 1;
-      const offsetYMatch = Math.abs(this.dragStartOffsetY - this.initialOffsetY) < 1;
-      return scaleMatch && offsetXMatch && offsetYMatch;
-    },
     drawImage() {
       const canvas = this.$refs.canvas;
       if (!canvas) return;
@@ -369,8 +353,6 @@ export default {
       if (this.isDragging) {
         const deltaX = e.clientX - this.dragStartX;
         const deltaY = e.clientY - this.dragStartY;
-        
-        // 始终允许拖动图片，展现拖动效果
         this.offsetX = this.dragStartOffsetX + deltaX;
         this.offsetY = this.dragStartOffsetY + deltaY;
         this.drawImage();
@@ -382,32 +364,6 @@ export default {
       if (this.isDragging) {
         this.dragEndX = e.clientX;
         this.dragEndY = e.clientY;
-        
-        // 如果拖动开始时处于初始状态，检查是否为左右滑动切换图片
-        if (this.wasAtInitialZoomStateAtStart()) {
-          const deltaX = this.dragEndX - this.dragStartX;
-          const deltaY = this.dragEndY - this.dragStartY;
-          const absDeltaX = Math.abs(deltaX);
-          const absDeltaY = Math.abs(deltaY);
-          
-          // 如果是水平滑动且移动距离超过阈值，切换图片
-          if (absDeltaX > absDeltaY && absDeltaX > this.swipeThreshold) {
-            if (deltaX > 0) {
-              // 向右滑动，显示上一张
-              this.showPreviousPhoto();
-            } else {
-              // 向左滑动，显示下一张
-              this.showNextPhoto();
-            }
-            this.isDragging = false;
-            return;
-          } else {
-            // 移动距离不够，恢复初始位置
-            this.offsetX = this.initialOffsetX;
-            this.offsetY = this.initialOffsetY;
-            this.drawImage();
-          }
-        }
       }
       this.isDragging = false;
     },
@@ -489,8 +445,6 @@ export default {
           const touch = this.touches[0];
           const deltaX = touch.clientX - this.dragStartX;
           const deltaY = touch.clientY - this.dragStartY;
-          
-          // 始终允许拖动图片，展现拖动效果
           this.offsetX = this.dragStartOffsetX + deltaX;
           this.offsetY = this.dragStartOffsetY + deltaY;
           this.dragEndX = touch.clientX;
@@ -505,76 +459,45 @@ export default {
         const currentDistance = this.getTouchDistance(this.touches);
         const currentCenter = this.getTouchCenter(this.touches);
         
-        if (this.lastTouchDistance > 0) {
-          // 计算缩放比例
+        if (this.lastTouchDistance > 0 && this.lastTouchScale > 0) {
+          // 计算缩放比例（基于双指距离的变化）
           const scaleChange = currentDistance / this.lastTouchDistance;
           const newScale = Math.max(this.minScale, Math.min(this.lastTouchScale * scaleChange, this.maxScale));
+          const scaleRatio = newScale / this.lastTouchScale;
           
-          // 以双指中心为缩放中心点
-          const scaleRatio = newScale / this.scale;
-          this.offsetX = currentCenter.x - (currentCenter.x - this.offsetX) * scaleRatio;
-          this.offsetY = currentCenter.y - (currentCenter.y - this.offsetY) * scaleRatio;
+          // 双指中心点在屏幕上移动的距离
+          const centerDeltaX = currentCenter.x - this.lastTouchCenter.x;
+          const centerDeltaY = currentCenter.y - this.lastTouchCenter.y;
+          
+          // 计算缩放前的双指中心点对应的图片坐标（相对于图片中心）
+          // 屏幕坐标转图片坐标：(screenPoint - offset) / scale
+          const imgPointX = (this.lastTouchCenter.x - this.offsetX) / this.lastTouchScale;
+          const imgPointY = (this.lastTouchCenter.y - this.offsetY) / this.lastTouchScale;
+          
+          // 缩放后，这个图片点在屏幕上的新位置应该是 currentCenter
+          // 所以：currentCenter = newOffset + imgPoint * newScale
+          // 因此：newOffset = currentCenter - imgPoint * newScale
+          this.offsetX = currentCenter.x - imgPointX * newScale;
+          this.offsetY = currentCenter.y - imgPointY * newScale;
           this.scale = newScale;
-          
-          // 如果中心点移动，同时调整偏移
-          if (this.lastTouchCenter.x !== 0 || this.lastTouchCenter.y !== 0) {
-            const centerDeltaX = currentCenter.x - this.lastTouchCenter.x;
-            const centerDeltaY = currentCenter.y - this.lastTouchCenter.y;
-            this.offsetX += centerDeltaX;
-            this.offsetY += centerDeltaY;
-          }
           
           this.drawImage();
         }
         
-        // 更新上一次的距离和中心点
+        // 更新上一次的距离和中心点（用于下次计算）
         this.lastTouchDistance = currentDistance;
         this.lastTouchCenter = currentCenter;
+        this.lastTouchScale = this.scale;
       }
     },
     handleTouchEnd(e) {
       e.preventDefault();
       
-      // 如果是单指触摸结束，检查是否为点击或滑动切换
+      // 如果是单指触摸结束，检查是否为点击
       if (this.touches.length === 1 && !this.isPinching && this.isDragging) {
         const touch = this.touches[0];
         this.dragEndX = touch.clientX;
         this.dragEndY = touch.clientY;
-        
-        // 如果拖动开始时处于初始状态，检查是否为左右滑动切换图片
-        if (this.wasAtInitialZoomStateAtStart()) {
-          const deltaX = this.dragEndX - this.dragStartX;
-          const deltaY = this.dragEndY - this.dragStartY;
-          const absDeltaX = Math.abs(deltaX);
-          const absDeltaY = Math.abs(deltaY);
-          
-          // 如果是水平滑动且移动距离超过阈值，切换图片
-          if (absDeltaX > absDeltaY && absDeltaX > this.swipeThreshold) {
-            if (deltaX > 0) {
-              // 向右滑动，显示上一张
-              this.showPreviousPhoto();
-            } else {
-              // 向左滑动，显示下一张
-              this.showNextPhoto();
-            }
-            this.isDragging = false;
-            this.dragEndX = undefined;
-            this.dragEndY = undefined;
-            // 更新触摸点列表
-            this.touches = Array.from(e.touches);
-            if (this.touches.length === 0) {
-              this.isPinching = false;
-              this.lastTouchDistance = 0;
-              this.lastTouchCenter = { x: 0, y: 0 };
-            }
-            return;
-          } else {
-            // 移动距离不够，恢复初始位置
-            this.offsetX = this.initialOffsetX;
-            this.offsetY = this.initialOffsetY;
-            this.drawImage();
-          }
-        }
         
         // 检查是否为点击（移动距离小于阈值）
         const deltaX = Math.abs(this.dragStartX - this.dragEndX);
@@ -823,66 +746,6 @@ canvas {
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  }
-}
-
-@media screen and (max-width: 450px) {
-  .zoom-toolbar {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    transform: none;
-    border-radius: 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    padding: 10px 8px;
-    gap: 6px;
-    justify-content: center;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .zoom-toolbar::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .toolbar-group {
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  
-  .zoom-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 11px;
-    flex-shrink: 0;
-  }
-  
-  .zoom-btn span {
-    font-size: 14px !important;
-  }
-  
-  .zoom-percent-btn {
-    min-width: 44px;
-  }
-  
-  .zoom-percent-btn span {
-    font-size: 11px !important;
-  }
-  
-  .photo-counter {
-    font-size: 11px;
-    min-width: 45px;
-    padding: 0 3px;
-  }
-  
-  .toolbar-divider {
-    height: 20px;
-    margin: 0 2px;
   }
 }
 
