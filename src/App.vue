@@ -205,8 +205,13 @@ export default {
 </script>
 
 <style>
-body {
+html, body {
   margin: 0;
+  /* 禁用缩放但允许平移 */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
+  /* 禁用双击高亮 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 #app {
