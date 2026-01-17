@@ -33,14 +33,20 @@
     <!-- 缩放工具栏 -->
     <div class="zoom-toolbar" v-show="showNavBar">
       <div class="toolbar-group">
-        <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
-          <span style="font-size: 18px;">+</span>
+        <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
+          <span style="font-size: 18px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          </span>
         </button>
         <button class="zoom-btn zoom-percent-btn" @click="toggleZoomPanel" :title="tr('preview.zoom_percent')">
           <span style="font-size: 12px;">{{ Math.round(scale * 100) }}%</span>
         </button>
-        <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
-          <span style="font-size: 18px;">−</span>
+        <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
         </button>
         <button class="zoom-btn" @click="resetZoom" :disabled="scale === initialScale && offsetX === initialOffsetX && offsetY === initialOffsetY" :title="tr('preview.reset_zoom')">
           <span style="font-size: 14px;">⟲</span>
@@ -49,11 +55,19 @@
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
         <button class="zoom-btn nav-photo-btn" @click="showPreviousPhoto" :disabled="index <= 0" :title="tr('preview.prev_photo')">
-          <span style="font-size: 14px;">◀</span>
+          <span style="font-size: 14px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
         </button>
         <span class="photo-counter">{{ index + 1 }} / {{ photo_count || image_list.length }}</span>
         <button class="zoom-btn nav-photo-btn" @click="showNextPhoto" :disabled="index >= (photo_count || image_list.length) - 1" :title="tr('preview.next_photo')">
-          <span style="font-size: 14px;">▶</span>
+          <span style="font-size: 14px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
         </button>
       </div>
     </div>
@@ -372,11 +386,11 @@ export default {
           
           // 水平滑动距离大于50px就切换图片（即使斜着拖动也只看水平距离）
           if (absDeltaX > 50) {
-            if (deltaX > 0) {
-              // 右滑 -> 下一张
+            if (deltaX < 0) {
+              // 左滑 -> 下一张
               this.showNextPhoto();
             } else {
-              // 左滑 -> 上一张
+              // 右滑 -> 上一张
               this.showPreviousPhoto();
             }
             // 切换图片后，重置拖拽状态，避免触发点击事件
@@ -964,6 +978,11 @@ canvas {
   .zoom-percent-suffix {
     color: #ccc;
   }
+}
+
+.zoom-btn svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 </style>
