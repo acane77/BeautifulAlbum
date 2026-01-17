@@ -39,6 +39,9 @@ export default {
     // i18n of Preview.vue
     "preview.loading": "Loading image...",
     "preview.download_btn": "Download",
+    "preview.zoom_in": "Zoom In",
+    "preview.zoom_out": "Zoom Out",
+    "preview.reset_zoom": "Reset",
 
     // i18n of Settings.vue
     "Settings": "Settings",

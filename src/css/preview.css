@@ -1,9 +1,10 @@
+/* 亮色模式默认白色背景 */
 .preview-with-navbar {
-    background-color: white;
+    background-color: #fff;
 }
 
 .preview-hidden-navbar {
-    background: #000;
+    background: #fff;
 }
 
 div.nav .backtext {

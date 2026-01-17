@@ -44,6 +44,9 @@ export default {
     // i18n of Preview.vue
     "preview.loading": "正在加载图片...",
     "preview.download_btn": "下载",
+    "preview.zoom_in": "放大",
+    "preview.zoom_out": "缩小",
+    "preview.reset_zoom": "重置",
     "Album": "相册",
 
     // i18n of Settings.vue
