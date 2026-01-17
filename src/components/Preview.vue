@@ -33,27 +33,39 @@
     <!-- 缩放工具栏 -->
     <div class="zoom-toolbar" v-show="showNavBar">
       <div class="toolbar-group">
-        <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
-          <span style="font-size: 18px;">+</span>
+        <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
         <button class="zoom-btn zoom-percent-btn" @click="toggleZoomPanel" :title="tr('preview.zoom_percent')">
           <span style="font-size: 12px;">{{ Math.round(scale * 100) }}%</span>
         </button>
-        <button class="zoom-btn" @click="zoomOut" :disabled="scale <= minScale" :title="tr('preview.zoom_out')">
-          <span style="font-size: 18px;">−</span>
+        <button class="zoom-btn" @click="zoomIn" :disabled="scale >= maxScale" :title="tr('preview.zoom_in')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
         <button class="zoom-btn" @click="resetZoom" :disabled="scale === initialScale && offsetX === initialOffsetX && offsetY === initialOffsetY" :title="tr('preview.reset_zoom')">
-          <span style="font-size: 14px;">⟲</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12Z" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 8L8 12L12 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 12H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
         </button>
       </div>
       <div class="toolbar-divider"></div>
       <div class="toolbar-group">
         <button class="zoom-btn nav-photo-btn" @click="showPreviousPhoto" :disabled="index <= 0" :title="tr('preview.prev_photo')">
-          <span style="font-size: 14px;">◀</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
         <span class="photo-counter">{{ index + 1 }} / {{ photo_count || image_list.length }}</span>
         <button class="zoom-btn nav-photo-btn" @click="showNextPhoto" :disabled="index >= (photo_count || image_list.length) - 1" :title="tr('preview.next_photo')">
-          <span style="font-size: 14px;">▶</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
         </button>
       </div>
     </div>
@@ -763,6 +775,11 @@ canvas {
   font-size: 14px;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+}
+
+.zoom-btn svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .zoom-btn:hover:not(:disabled) {
