@@ -114,6 +114,34 @@ Options:
     --                     -- 后面所有的参数将被传递给'scripts/generate_api.py'
 ```
 
+
+### 示例：使用 deepface 和 yolov8 进行人脸检测
+
+```bash
+docker run -d -p 8080:8080 \
+  -v /path/to/your/album:/www/album \
+  -e ALBUM_PASSWORD=secret \
+  -e CENTER_FACE=1 \
+  -e FACE_DETECTOR=deepface \
+  -e FACE_DETECTOR_MODEL=yolov8 \
+  beautiful-album
+```
+
+### 示例：启用人脸聚类功能
+
+```bash
+docker run -d -p 8080:8080 \
+  -v /path/to/your/album:/www/album \
+  -e ALBUM_PASSWORD=secret \
+  -e CENTER_FACE=1 \
+  -e FACE_DETECTOR=deepface \
+  -e FACE_DETECTOR_MODEL=yolov8 \
+  -e FACE_CLUSTERING=1 \
+  beautiful-album
+```
+
+---
+
 **人脸居中功能：人脸检测说明**
 
 可用的推理前端包括以下几种，可使用 `--face-detector` 参数传入，可用 `--face-detector-model` 指定要使用的模型。
@@ -159,6 +187,74 @@ Options:
                --face-clustering \
                -- --face_clustering_eps=0.75 --face_clustering_min_samples=4
 ```
+
+## 使用 Docker 部署
+
+### 组织相册
+
+* 参考上方的"Step 1. 组织相册"
+
+### 容器目录说明
+
+* **网页文件**: 容器内的 `/www/` 目录
+* **图片目录**: 容器内的 `/www/album/` 目录（需要挂载到主机的相册目录）
+* **API 文件**: 容器内的 `/www/api/` 目录（自动生成）
+
+### 基本使用
+
+**1. 构建 Docker 镜像**
+
+```bash
+docker build -t beautiful-album .
+```
+
+**2. 运行容器**
+
+```bash
+docker run -d -p 8080:8080 \
+  -v /path/to/your/album:/www/album \
+  beautiful-album
+```
+
+运行后，等待API构建完成，访问 `http://localhost:8080` 即可查看相册。
+
+### 使用环境变量自定义配置
+
+Docker 容器支持通过环境变量来配置项目参数：
+
+```bash
+docker run -d -p 8080:8080 \
+  -v /path/to/your/album:/www/album \
+  -e ALBUM_PASSWORD=yourpassword \
+  -e CENTER_FACE=1 \
+  -e FACE_DETECTOR=deepface \
+  -e FACE_DETECTOR_MODEL=yolov8 \
+  -e FACE_CLUSTERING=1 \
+  beautiful-album
+```
+
+### 环境变量说明
+
+* `ALBUM_PASSWORD`: 相册密码（默认：`secret`）
+* `CENTER_FACE`: 是否启用人脸居中功能（设置为 `1` 或 `true` 启用）
+* `FACE_DETECTOR`: 人脸检测器（默认：`opencv`，可选：`deepface`）
+* `FACE_DETECTOR_MODEL`: 人脸检测模型（如：`yolov8`，仅在使用 `deepface` 时需要）
+* `FACE_CLUSTERING`: 是否启用人脸聚类功能（设置为 `1` 或 `true` 启用）
+* `DISABLE_SHARE`: 是否禁用分享功能（设置为 `1` 或 `true` 禁用）
+* `PORT`: Web 服务器端口（默认：`8080`）
+
+### 复制构建好的文件
+
+如果需要将构建好的文件（包括生成的 API）从容器中复制到本地，可以使用 `docker cp` 命令：
+
+```bash
+docker cp beautiful-album:/www /your/local/path
+```
+
+**注意**: 
+* `beautiful-album` 是容器的名称或 ID，如果使用 `-d` 后台运行，需要通过 `docker ps` 查看容器名称或 ID
+* 复制后，`/your/local/path/www` 目录将包含所有构建好的文件，可以直接部署到 Web 服务器
+
 
 ---------
 
