@@ -10,6 +10,8 @@ BOOTSTRAP_SCRIPT="/build/bootstrap.sh"
 
 echo "=== Beautiful Album Docker Entrypoint ==="
 
+cd /build
+pwd
 # Check if album directory exists
 if [ -d "$ALBUM_DIR" ] && [ "$(ls -A $ALBUM_DIR 2>/dev/null)" ]; then
     echo "-- Album directory found: $ALBUM_DIR"

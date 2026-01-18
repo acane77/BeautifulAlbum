@@ -8,13 +8,12 @@ WORKDIR /build
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    wget \
-    python3 \
-    python3-pip \
-    build-essential \
-    && rm -rf /var/lib/apt/lists/*
+    curl git wget \
+    python3 python3-pip \
+    build-essential libgl1-mesa-glx libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /bin/python3 /bin/python \
+    && ln -sf /bin/pip3 /bin/pip
 
 # Install Node.js 16 (using NodeSource official repository)
 RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
@@ -25,11 +24,12 @@ RUN curl -fsSL https://deb.nodesource.com/setup_16.x | bash - \
 RUN node --version && npm --version
 
 # Install Python dependencies (including deepface for advanced face detection)
-RUN pip3 install --no-cache-dir \
+RUN pip3 config set global.index-url https://pypi.mirrors.ustc.edu.cn/simple/ \
+    && pip3 install --no-cache-dir \
     Pillow \
     opencv-python \
     numpy \
-    deepface
+    deepface tf-keras
 
 # Copy project files (.dockerignore will exclude unnecessary files)
 COPY . /build
