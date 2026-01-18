@@ -7,15 +7,37 @@ set -e
 WWW_DIR="/www"
 ALBUM_DIR="${WWW_DIR}/album"
 BOOTSTRAP_SCRIPT="/build/bootstrap.sh"
+TIMESTAMP_FILE="${WWW_DIR}/TIMESTAMP"
 
 echo "=== Beautiful Album Docker Entrypoint ==="
 
 cd /build
-pwd
+
 # Check if album directory exists
 if [ -d "$ALBUM_DIR" ] && [ "$(ls -A $ALBUM_DIR 2>/dev/null)" ]; then
     echo "-- Album directory found: $ALBUM_DIR"
-    echo "-- Generating APIs..."
+    
+    # Check if we need to regenerate APIs by comparing timestamps
+    NEED_REGENERATE=true
+    if [ -f "$TIMESTAMP_FILE" ]; then
+        # Get modification time of album directory and timestamp file
+        ALBUM_MTIME=$(stat -c %Y "$ALBUM_DIR" 2>/dev/null || echo "0")
+        TIMESTAMP_MTIME=$(stat -c %Y "$TIMESTAMP_FILE" 2>/dev/null || echo "0")
+        
+        # If album directory is older than timestamp, skip regeneration
+        if [ "$ALBUM_MTIME" -lt "$TIMESTAMP_MTIME" ]; then
+            echo "-- Album directory is up-to-date (timestamp: $TIMESTAMP_MTIME, album: $ALBUM_MTIME)"
+            echo "-- Skipping API regeneration..."
+            NEED_REGENERATE=false
+        else
+            echo "-- Album directory has been modified, regenerating APIs..."
+        fi
+    else
+        echo "-- Timestamp file not found, generating APIs..."
+    fi
+    
+    if [ "$NEED_REGENERATE" = true ]; then
+        echo "-- Generating APIs..."
     
     # Build arguments (can be passed via environment variables)
     CENTER_FACE_ARG=""
@@ -56,10 +78,14 @@ if [ -d "$ALBUM_DIR" ] && [ "$(ls -A $ALBUM_DIR 2>/dev/null)" ]; then
     [ -n "$FACE_CLUSTERING_ARG" ] && CMD_ARGS+=("$FACE_CLUSTERING_ARG")
     [ -n "$DISABLE_SHARE_ARG" ] && CMD_ARGS+=("$DISABLE_SHARE_ARG")
     
-    if "$BOOTSTRAP_SCRIPT" "${CMD_ARGS[@]}"; then
-        echo "-- API generation completed!"
-    else
-        echo "-- Error: API generation failed, but continuing to start server..."
+        if "$BOOTSTRAP_SCRIPT" "${CMD_ARGS[@]}"; then
+            echo "-- API generation completed!"
+            # Update timestamp file after successful API generation
+            touch "$TIMESTAMP_FILE"
+            echo "-- Timestamp file updated: $TIMESTAMP_FILE"
+        else
+            echo "-- Error: API generation failed, but continuing to start server..."
+        fi
     fi
 else
     echo "-- Warning: Album directory not found or empty: $ALBUM_DIR"
