@@ -313,23 +313,25 @@ def generate_people_collection(**kwargs):
             embeds2images += ([image_idx]*len(data["faces"]))
     assert len(embeds) == len(embeds2images)
     print("-- Count of faces:", len(embeds))
-    embeds = np.array(embeds)
-    print("-- Embedding shape: ", embeds.shape)
-    embeds = embeds / np.linalg.norm(embeds, axis=1)[:, np.newaxis]
-    # clustering
-    labels = face_clustering.clustering(embeds, "dbscan", **kwargs)
-    # print("-- Labels:", labels)
-    categories = set(labels)
-    categories = [ c for c in categories if c != -1 ]
-    print("-- Number of categories (People):", len(categories))
     categories2image = {}
-    for label_idx, label in enumerate(labels):
-        if label == -1:
-            continue
-        if label not in categories2image.keys():
-            categories2image[label] = []
-        image_idx = embeds2images[label_idx]
-        categories2image[label].append(face_embedding_test_data[image_idx]["image"])
+    categories = []
+    if len(embeds) > 0:
+        embeds = np.array(embeds)
+        print("-- Embedding shape: ", embeds.shape)
+        embeds = embeds / np.linalg.norm(embeds, axis=1)[:, np.newaxis]
+        # clustering
+        labels = face_clustering.clustering(embeds, "dbscan", **kwargs)
+        # print("-- Labels:", labels)
+        categories = set(labels)
+        categories = [ c for c in categories if c != -1 ]
+        print("-- Number of categories (People):", len(categories))
+        for label_idx, label in enumerate(labels):
+            if label == -1:
+                continue
+            if label not in categories2image.keys():
+                categories2image[label] = []
+            image_idx = embeds2images[label_idx]
+            categories2image[label].append(face_embedding_test_data[image_idx]["image"])
 
     write_json_file("people/categories.json",
                     {
