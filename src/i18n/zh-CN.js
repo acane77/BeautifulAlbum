@@ -46,9 +46,10 @@ export default {
     "preview.download_btn": "下载",
     "preview.zoom_in": "放大",
     "preview.zoom_out": "缩小",
+    "preview.zoom_percent": "缩放百分比",
     "preview.reset_zoom": "重置",
-    "preview.prev_photo": "上一张",
-    "preview.next_photo": "下一张",
+    "preview.prev_photo": "上一张（左方向键）",
+    "preview.next_photo": "下一张（右方向键）",
     "Album": "相册",
 
     // i18n of Settings.vue

@@ -41,9 +41,10 @@ export default {
     "preview.download_btn": "Download",
     "preview.zoom_in": "Zoom In",
     "preview.zoom_out": "Zoom Out",
+    "preview.zoom_percent": "Zoom Percent",
     "preview.reset_zoom": "Reset",
-    "preview.prev_photo": "Previous",
-    "preview.next_photo": "Next",
+    "preview.prev_photo": "Previous (Left Arrow Key)",
+    "preview.next_photo": "Next (Right Arrow Key)",
 
     // i18n of Settings.vue
     "Settings": "Settings",

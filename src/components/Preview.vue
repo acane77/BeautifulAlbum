@@ -647,6 +647,22 @@ export default {
       
       // 更新输入框值为修正后的值
       e.target.value = Math.round(this.scale * 100);
+    },
+    handleKeyDown(e) {
+      // 如果用户正在输入框中输入，则不处理键盘事件
+      const target = e.target;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+        return;
+      }
+      
+      // 处理左右箭头键
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        this.showPreviousPhoto();
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        this.showNextPhoto();
+      }
     }
   },
   watch: {
@@ -676,6 +692,9 @@ export default {
       this.updateCanvasSize();
       window.addEventListener('resize', this.updateCanvasSize);
       
+      // 监听键盘事件
+      window.addEventListener('keydown', this.handleKeyDown);
+      
       // 监听系统主题变化
       const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       const handleThemeChange = (e) => {
@@ -693,6 +712,8 @@ export default {
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.updateCanvasSize);
+    // 移除键盘事件监听器
+    window.removeEventListener('keydown', this.handleKeyDown);
     // 移除主题变化监听器
     if (this.darkModeMediaQuery && this.handleThemeChange) {
       this.darkModeMediaQuery.removeEventListener('change', this.handleThemeChange);
