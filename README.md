@@ -233,6 +233,28 @@ docker run -d -p 8080:8080 \
   beautiful-album
 ```
 
+### 在Docker中利用GPU加速生成API
+
+如果主机安装了 NVIDIA GPU 和 NVIDIA Container Toolkit，可以使用 GPU 加速人脸检测和聚类时的人脸特征检测功能，显著提升处理速度。
+
+```bash
+docker run -d -p 8080:8080 \
+  --gpus all \
+  -v /path/to/your/album:/www/album \
+  -e ALBUM_PASSWORD=yourpassword \
+  -e CENTER_FACE=1 \
+  -e FACE_DETECTOR=deepface \
+  -e FACE_DETECTOR_MODEL=yolov8 \
+  -e FACE_CLUSTERING=1 \
+  beautiful-album
+```
+
+
+**注意：**
+* 使用 GPU 部署前需要安装 [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+* GPU 加速仅在使用 `deepface` 作为人脸检测器时生效
+* 确保 Docker 版本为 19.03 或更高版本以支持 `--gpus` 参数
+
 ### 环境变量说明
 
 * `ALBUM_PASSWORD`: 相册密码（默认：`secret`）
