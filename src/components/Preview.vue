@@ -1006,4 +1006,66 @@ canvas {
   flex-shrink: 0;
 }
 
+
+@media screen and (max-width: 450px) {
+  .zoom-toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    transform: none;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 10px 8px;
+    gap: 6px;
+    justify-content: center;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .zoom-toolbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .toolbar-group {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  
+  .zoom-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  
+  .zoom-btn span {
+    font-size: 14px !important;
+  }
+  
+  .zoom-percent-btn {
+    min-width: 44px;
+  }
+  
+  .zoom-percent-btn span {
+    font-size: 11px !important;
+  }
+  
+  .photo-counter {
+    font-size: 11px;
+    min-width: 45px;
+    padding: 0 3px;
+  }
+  
+  .toolbar-divider {
+    height: 20px;
+    margin: 0 2px;
+  }
+}
+
+
 </style>
