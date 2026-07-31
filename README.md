@@ -1,5 +1,7 @@
 # Beautiful Album
 
+[English Version](README.en-US.md)
+
 ## 简介
 
 这是一个iOS风格的纯静态在线相册。
